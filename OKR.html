@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Q1 Supply Chain Quest ⚔️📦</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', Courier, monospace;
+      background: #0d001a;
+      color: #e0f7ff;
+      image-rendering: pixelated;
+      background-image: 
+        linear-gradient(rgba(20,0,40,0.85), rgba(20,0,40,0.85)),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23110022"/><path d="M0 0h2v2H0zM62 62h2v2h-2z" fill="%23330066"/></svg>');
+      background-size: 64px 64px;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 30px auto;
+      padding: 30px;
+      background: rgba(10, 5, 30, 0.8);
+      border: 6px solid #00ffea;
+      border-image: linear-gradient(to right, #00ffea, #ff00aa) 1;
+      box-shadow: 0 0 40px rgba(0,255,234,0.3);
+      border-radius: 20px;
+    }
+    .header-section { text-align: center; margin-bottom: 30px; }
+    .quest-title {
+      color: #00ffea;
+      text-shadow: 0 0 20px #00ffea, 0 0 40px #ff00aa;
+      font-size: 5.5rem;
+      margin: 0 0 10px;
+      letter-spacing: 10px;
+      animation: titlePulse 4s infinite;
+    }
+    .pos360-logo {
+      max-width: 450px;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 0 25px #00ffea) brightness(1.2);
+    }
+    .subtitle { color: #a78bfa; font-size: 1.8rem; margin: 10px 0 30px; }
+
+    .motivation { text-align: center; font-size: 2rem; margin: 40px 0; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+
+    .arsenal-header {
+      position: relative;
+      text-align: center;
+      margin: 40px 0 20px;
+    }
+    .arsenal-title {
+      color: #ffd700;
+      font-size: 3.5rem;
+      text-shadow: 0 0 20px #ffd700, 0 0 40px #ff00aa;
+      letter-spacing: 4px;
+      animation: glowPulse 3s infinite;
+      display: inline-block;
+    }
+    .arsenal-title::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 4px;
+      background: linear-gradient(to right, transparent, #ffd700, #ff00aa, transparent);
+      box-shadow: 0 0 20px #ffd700;
+      border-radius: 50%;
+    }
+
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 25px;
+      justify-items: center;
+    }
+    @media (max-width: 1400px) { .stock-grid { grid-template-columns: repeat(5, 1fr); } }
+    @media (max-width: 1100px) { .stock-grid { grid-template-columns: repeat(4, 1fr); } }
+    .stock-item {
+      background: rgba(30,20,60,0.7);
+      border: 4px solid #00ffea;
+      border-radius: 14px;
+      padding: 18px;
+      width: 100%;
+      max-width: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-height: 240px;
+    }
+    .stock-icon { font-size: 5rem; margin-bottom: 10px; }
+    .stock-label { font-size: 1.4rem; color: #a78bfa; margin-bottom: 10px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+    .mos-display {
+      font-size: 2.4rem;
+      font-weight: bold;
+      margin-top: 10px;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+    }
+    .mos-display.win { color: #00ff9d; animation-name: pulseGreen; }
+    .mos-display.danger { color: #ff0044; animation-name: pulseRed; }
+
+    @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes titlePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.85; } }
+    @keyframes glowPulse { 0%,100% { text-shadow: 0 0 20px #ffd700, 0 0 40px #ff00aa; } 50% { text-shadow: 0 0 30px #ffd700, 0 0 60px #ff00aa; } }
+
+    .okr-section { margin: 30px 0; padding: 25px; background: rgba(30,20,60,0.6); border: 5px solid #a78bfa; border-radius: 16px; }
+    .okr-title { color: #ff00aa; font-size: 2.2rem; margin: 0 0 15px; text-shadow: 0 0 10px #ff00aa; }
+    .progress-bar { height: 35px; background: #111133; border: 3px solid #ffd700; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #ff6b6b, #00ff9d); width: 0%; transition: width 1s ease; }
+    .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 15px; }
+    .badge { padding: 10px 18px; font-size: 1.2rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 20px; transition: all 0.4s; }
+    .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 15px #ffd700aa; transform: scale(1.1); font-weight: bold; }
+
+    button.reset { display: block; margin: 40px auto; padding: 16px 40px; font-size: 1.6rem; background: #ff0044; color: white; border: 3px solid #ff00aa; border-radius: 10px; cursor: pointer; }
+    button.reset:hover { background: #cc0033; }
+
+    footer { text-align: center; color: #666688; margin-top: 60px; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-section">
+    <h1 class="quest-title">Q1 SUPPLY CHAIN QUEST</h1>
+    <img src="https://dce629aa.delivery.rocketcdn.me/wp-content/uploads/2024/05/POS360-Logo.png" alt="POS360 Official Logo" class="pos360-logo">
+    <p class="subtitle">Enough inventory to support Sales & Onboarding needs – Powered by POS360 • 2026</p>
+  </div>
+
+  <div class="motivation">QUEST ACTIVE</div>
+
+  <!-- Hardware Arsenal Section -->
+  <div class="arsenal-header">
+    <div class="arsenal-title">HARDWARE ARSENAL</div>
+  </div>
+  <div class="stock-grid">
+    <div class="stock-item">
+      <div class="stock-icon">🧠</div>
+      <div class="stock-label">360 Pro Primary</div>
+      <div class="mos-display" id="primaryMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">②</div>
+      <div class="stock-label">360 Pro Secondary</div>
+      <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">🖨️</div>
+      <div class="stock-label">Receipt Printers</div>
+      <div class="mos-display" id="printerMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">📱</div>
+      <div class="stock-label">Tablets</div>
+      <div class="mos-display" id="tabletMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">💳</div>
+      <div class="stock-label">Pin Pads</div>
+      <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">🏷️</div>
+      <div class="stock-label">Deal Tag Printer</div>
+      <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">🏷️</div>
+      <div class="stock-label">Retail Tag Printer</div>
+      <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">🔋</div>
+      <div class="stock-label">Backup Battery</div>
+      <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">🛠️</div>
+      <div class="stock-label">Metal Stands</div>
+      <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">⚖️</div>
+      <div class="stock-label">Scales</div>
+      <div class="mos-display" id="scalesMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">💻</div>
+      <div class="stock-label">Sango Computer</div>
+      <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
+    </div>
+    <div class="stock-item">
+      <div class="stock-icon">📺</div>
+      <div class="stock-label">LCD Kits</div>
+      <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
+    </div>
+  </div>
+
+  <!-- OKRs -->
+  <div class="okr-section">
+    <div class="okr-title">OKR 1: Get All Hardware Categories to ≥ 1 Month of Supply</div>
+    <div id="okr1Status" style="text-align: center; font-size: 1.5rem; margin: 12px 0; color: #ffd700; font-weight: bold;">
+      <span id="okr1Count">0</span> of 12 categories ≥ 1 MOS
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog1" style="background: linear-gradient(90deg, #ff6b6b, #00ff9d);"></div></div>
+    <div class="badge-container">
+      <span class="badge" id="bAll">All Categories Safe! ★</span>
+    </div>
+  </div>
+
+  <div class="okr-section">
+    <div class="okr-title">OKR 2: Reduce 360 Register Pro Cost by >20%</div>
+    <div class="input-group" style="font-size: 1.4rem; margin-bottom: 12px; text-align: center;">
+      Reduction Achieved: <span id="costPercent">0</span>%
+      <input type="range" id="costSlider" min="0" max="30" value="0" step="0.1">
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog2"></div></div>
+    <div class="badge-container">
+      <span class="badge" id="b2">2% First Wins!</span>
+      <span class="badge" id="b5">5% Solid Progress!</span>
+      <span class="badge" id="b10">10% Double Digits!</span>
+      <span class="badge" id="b15">15% Major Gains!</span>
+      <span class="badge" id="b20">20%+ Target Achieved! ★ Victory!</span>
+    </div>
+  </div>
+
+  <div class="okr-section">
+    <div class="okr-title">OKR 3: Throttle Cash Flow</div>
+    <div class="input-group" style="font-size: 1.4rem; margin-bottom: 12px; text-align: center;">
+      Cash Flow Control Level: <span id="cashPercent">30</span>%
+      <input type="range" id="cashSlider" min="0" max="100" value="30">
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog3"></div></div>
+    <div class="badge-container">
+      <span class="badge" id="b60c">60%+ Controlled</span>
+      <span class="badge" id="b85c">85%+ Master</span>
+      <span class="badge" id="b95c">95%+ Untouchable</span>
+    </div>
+  </div>
+
+  <button class="reset" onclick="resetProgress()">Reset All Progress (New 2026 Quest)</button>
+
+  <footer>POS360 Efficiency Tracker • Live data from Google Sheet • Refresh to update • January 2026 • Systems Made Simple! ⚡</footer>
+</div>
+
+<script>
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
+
+  const mosElements = {
+    primaryMOS: document.getElementById('primaryMOS'),
+    secondaryMOS: document.getElementById('secondaryMOS'),
+    printerMOS: document.getElementById('printerMOS'),
+    tabletMOS: document.getElementById('tabletMOS'),
+    pinpadMOS: document.getElementById('pinpadMOS'),
+    dealTagPrinterMOS: document.getElementById('dealTagPrinterMOS'),
+    retailTagPrinterMOS: document.getElementById('retailTagPrinterMOS'),
+    backupBatteryMOS: document.getElementById('backupBatteryMOS'),
+    metalStandsMOS: document.getElementById('metalStandsMOS'),
+    scalesMOS: document.getElementById('scalesMOS'),
+    sangoComputerMOS: document.getElementById('sangoComputerMOS'),
+    lcdKitsMOS: document.getElementById('lcdKitsMOS')
+  };
+
+  const itemOrder = [
+    '360 Pro Primary',
+    '360 Pro Secondary',
+    'Receipt Printers',
+    'Tablets',
+    'Pin Pads',
+    'Deal Tag Printer',
+    'Retail Tag Printer',
+    'Backup Battery',
+    'Metal Stands',
+    'Scales',
+    'Sango Computer',
+    'LCD Kits'
+  ];
+
+  async function loadFromSheet() {
+    try {
+      const response = await fetch(CSV_URL);
+      const csvText = await response.text();
+      const rows = csvText.trim().split('\n').map(row => row.split(','));
+
+      const dataRows = rows.slice(1);
+
+      const mosMap = {};
+      dataRows.forEach(row => {
+        const item = row[0].trim();
+        const mos = parseFloat(row[2]) || 0;
+        mosMap[item] = mos;
+      });
+
+      let safeCount = 0;
+      itemOrder.forEach((item, index) => {
+        const mosValue = mosMap[item] || 0;
+        const mosEl = Object.values(mosElements)[index];
+        mosEl.textContent = mosValue.toFixed(1) + " MOS";
+
+        mosEl.classList.remove('win', 'danger');
+        if (mosValue >= 1) {
+          mosEl.classList.add('win');
+          safeCount++;
+        } else {
+          mosEl.classList.add('danger');
+        }
+      });
+
+      const okr1Pct = (safeCount / 12) * 100;
+      document.getElementById('prog1').style.width = okr1Pct + '%';
+      document.getElementById('okr1Count').textContent = safeCount;
+
+      if (safeCount === 12) {
+        document.getElementById('bAll').classList.add('unlocked');
+      } else {
+        document.getElementById('bAll').classList.remove('unlocked');
+      }
+    } catch (error) {
+      console.error("Error loading sheet:", error);
+    }
+  }
+
+  loadFromSheet();
+
+  // OKR 2 slider live update
+  document.getElementById('costSlider').addEventListener('input', function() {
+    const value = +this.value;
+    document.getElementById('costPercent').textContent = value;
+    const visualPct = Math.min(100, (value / 30) * 100);
+    document.getElementById('prog2').style.width = visualPct + '%';
+
+    document.getElementById('b2').classList.toggle('unlocked', value >= 2);
+    document.getElementById('b5').classList.toggle('unlocked', value >= 5);
+    document.getElementById('b10').classList.toggle('unlocked', value >= 10);
+    document.getElementById('b15').classList.toggle('unlocked', value >= 15);
+    document.getElementById('b20').classList.toggle('unlocked', value >= 20);
+  });
+
+  // OKR 3 slider live update
+  document.getElementById('cashSlider').addEventListener('input', function() {
+    const value = +this.value;
+    document.getElementById('cashPercent').textContent = value;
+    document.getElementById('prog3').style.width = value + '%';
+
+    document.getElementById('b60c').classList.toggle('unlocked', value >= 60);
+    document.getElementById('b85c').classList.toggle('unlocked', value >= 85);
+    document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
+  });
+
+  console.log("Q1 Supply Chain Quest loaded – Sheet connected, sliders working!");
+</script>
+</body>
+</html>
