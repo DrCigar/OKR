@@ -43,6 +43,27 @@
 
     .motivation { text-align: center; font-size: 1.9rem; margin: 20px 0; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
 
+    .safety-bar {
+      background: #1a0033;
+      color: #00ff9d;
+      font-size: 1.8rem;
+      padding: 12px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-align: center;
+      text-shadow: 0 0 10px #00ff9d;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #00ff9d;
+    }
+    .safety-text {
+      display: inline-block;
+      animation: scrollLeft 25s linear infinite;
+    }
+    @keyframes scrollLeft {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
     .arsenal-header {
       text-align: center;
       margin: 30px 0 15px;
@@ -127,6 +148,7 @@
       height: 100%;
       background: linear-gradient(90deg, #ff6b6b, #00ff9d);
       transition: width 0.6s ease;
+      width: 0%;
     }
     input[type="range"] {
       -webkit-appearance: none;
@@ -153,14 +175,17 @@
     .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
     .badge { padding: 8px 14px; font-size: 1rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 16px; transition: all 0.4s; }
     .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 15px #ffd700aa; transform: scale(1.05); font-weight: bold; }
-
-    button.reset { display: block; margin: 30px auto; padding: 14px 35px; font-size: 1.4rem; background: #ff0044; color: white; border: 3px solid #ff00aa; border-radius: 10px; cursor: pointer; }
-    button.reset:hover { background: #cc0033; }
   </style>
 </head>
 <body>
 
 <div class="container">
+  <div class="safety-bar">
+    <div class="safety-text">
+      Days Since Last Incident: 625 | Safety First! 🛡️
+    </div>
+  </div>
+
   <div class="header-section">
     <h1 class="quest-title">Q1 SUPPLY CHAIN QUEST</h1>
     <img src="https://dce629aa.delivery.rocketcdn.me/wp-content/uploads/2024/05/POS360-Logo.png" alt="POS360 Official Logo" class="pos360-logo">
@@ -276,7 +301,7 @@
       </div>
       <div class="progress-bar">
         <div class="progress-fill" id="prog3"></div>
-        <input type="range" id="cashSlider" min="0" max="100" value="30">
+        <input type="range" id="cashSlider" min="0" max="100" value="0">
       </div>
       <div class="badge-container">
         <span class="badge" id="b60c">60%+</span>
@@ -285,8 +310,6 @@
       </div>
     </div>
   </div>
-
-  <button class="reset" onclick="resetProgress()">Reset All Progress</button>
 </div>
 
 <script>
@@ -391,7 +414,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Q1 Supply Chain Quest loaded – sliders invisible and interactive!");
+  console.log("Q1 Supply Chain Quest loaded – sliders start at 0, fully interactive!");
 </script>
 </body>
 </html>
