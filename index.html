@@ -415,6 +415,30 @@
   });
 
   console.log("Q1 Supply Chain Quest loaded – sliders start at 0, fully interactive!");
+
+  // ─────────────── Safety Days Counter ───────────────
+function updateSafetyDays() {
+  // ← Change this date to your actual last incident date
+  const lastIncident = new Date("2024-06-15");   // ← example: June 15, 2024
+
+  const today = new Date();
+  const diffTime = today - lastIncident;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  const safetyText = document.querySelector('.safety-text');
+  safetyText.textContent = `Days Since Last Incident: ${diffDays} | Safety First! 🛡️`;
+}
+
+// Run once on page load
+updateSafetyDays();
+
+// Optional: re-check every midnight (not strictly needed for most cases)
+setInterval(() => {
+  const now = new Date();
+  if (now.getHours() === 0 && now.getMinutes() === 0) {
+    updateSafetyDays();
+  }
+}, 60000);
 </script>
 </body>
 </html>
