@@ -12,7 +12,7 @@
       background: #0d001a;
       color: #e0f7ff;
       image-rendering: pixelated;
-      background-image: 
+      background-image:
         linear-gradient(rgba(20,0,40,0.85), rgba(20,0,40,0.85)),
         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23110022"/><path d="M0 0h2v2H0zM62 62h2v2h-2z" fill="%23330066"/></svg>');
       background-size: 64px 64px;
@@ -32,7 +32,7 @@
     .dashboard-title {
       color: #00ffea;
       text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa;
-      font-size: 3.2rem; /* smaller title */
+      font-size: 3.2rem;
       margin: 0;
       letter-spacing: 6px;
       animation: pulseGlow 3.5s infinite;
@@ -41,12 +41,11 @@
       0%, 100% { opacity: 1; text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa; }
       50% { opacity: 0.85; text-shadow: 0 0 15px #00ffea, 0 0 30px #ff00aa; }
     }
-
     .safety-bar {
       background: #1a0033;
       color: #00ff9d;
-      font-size: 1.2rem; /* smaller scrolling bar font */
-      padding: 8px 0; /* reduced padding */
+      font-size: 1.2rem;
+      padding: 8px 0;
       overflow: hidden;
       white-space: nowrap;
       text-align: center;
@@ -62,7 +61,6 @@
       0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
     }
-
     .kpi-section {
       margin: 0 0 25px;
       text-align: center;
@@ -75,7 +73,7 @@
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr); /* fixed 3 across */
+      grid-template-columns: repeat(3, 1fr);
       gap: 18px;
     }
     .kpi-card {
@@ -96,7 +94,6 @@
       color: #00ff9d;
       text-shadow: 0 0 12px #00ff9d;
     }
-
     .arsenal-header {
       text-align: center;
       margin: 25px 0 12px;
@@ -117,7 +114,6 @@
       margin: 8px auto;
       box-shadow: 0 0 18px #ffd700;
     }
-
     .stock-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -135,23 +131,30 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      min-height: 150px; /* smaller box height */
+      min-height: 150px;
+      position: relative;
     }
     .stock-icon { font-size: 4rem; margin-bottom: 6px; }
     .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; }
     .mos-display {
-      font-size: 1.8rem; /* smaller MOS font */
+      font-size: 1.8rem;
       font-weight: bold;
       animation-duration: 2s;
       animation-iteration-count: infinite;
     }
     .mos-display.win { color: #00ff9d; animation-name: pulseGreen; }
     .mos-display.danger { color: #ff0044; animation-name: pulseRed; }
-
+    .quantity-small {
+      font-size: 0.9rem;
+      color: #ffd700;
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-weight: bold;
+    }
     @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     @keyframes glowPulse { 0%,100% { text-shadow: 0 0 18px #ffd700; } 50% { text-shadow: 0 0 30px #ffd700; } }
-
     .okr-row {
       display: flex;
       justify-content: space-between;
@@ -210,80 +213,59 @@
   </style>
 </head>
 <body>
-
 <div class="container">
   <div class="safety-bar">
-    <div class="safety-text">
-      Days Since Last Incident: 625 | Safety First! 🛡️
+    <div class="safety-text" id="safetyText">
+      Days Since Last Incident: Calculating... | Safety First! 🛡️
     </div>
   </div>
-
   <div class="header-section">
     <h1 class="dashboard-title">SUPPLY CHAIN DASHBOARD</h1>
   </div>
-
-  <!-- KPI Cards – fixed 3 across, your list -->
+  <!-- KPI Cards -->
   <div class="kpi-section">
     <div class="kpi-title">KPI's</div>
     <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card">
-        <div class="kpi-name">Shipping Accuracy</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-name">On Time Fulfillment</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-name">Inventory Accuracy</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-name">On Time PO %</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-name">Average Delivery Time</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-name">All Time Stock Outs</div>
-        <div class="kpi-value">[Value]</div>
-      </div>
+      <!-- Filled live from Sheet 2 -->
     </div>
   </div>
-
   <!-- Hardware Arsenal -->
   <div class="arsenal-header">
     <div class="arsenal-title">HARDWARE ARSENAL</div>
   </div>
   <div class="stock-grid">
     <div class="stock-item">
+      <div class="quantity-small" id="primaryQty">0</div>
       <div class="stock-icon">🧠</div>
       <div class="stock-label">360 Pro Primary</div>
       <div class="mos-display" id="primaryMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="secondaryQty">0</div>
       <div class="stock-icon">②</div>
       <div class="stock-label">360 Pro Secondary</div>
       <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="printerQty">0</div>
       <div class="stock-icon">🖨️</div>
       <div class="stock-label">Receipt Printers</div>
       <div class="mos-display" id="printerMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="tabletQty">0</div>
       <div class="stock-icon">📱</div>
       <div class="stock-label">Tablets</div>
       <div class="mos-display" id="tabletMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="pinpadQty">0</div>
       <div class="stock-icon">💳</div>
       <div class="stock-label">Pin Pads</div>
       <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="dealTagQty">0</div>
       <div class="stock-icon">🏷️</div>
       <div class="stock-label">Deal Tag Printer</div>
       <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
@@ -291,37 +273,42 @@
   </div>
   <div class="stock-grid">
     <div class="stock-item">
+      <div class="quantity-small" id="retailTagQty">0</div>
       <div class="stock-icon">🏷️</div>
       <div class="stock-label">Retail Tag Printer</div>
       <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="backupQty">0</div>
       <div class="stock-icon">🔋</div>
       <div class="stock-label">Backup Battery</div>
       <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="metalStandsQty">0</div>
       <div class="stock-icon">🛠️</div>
       <div class="stock-label">Metal Stands</div>
       <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="scalesQty">0</div>
       <div class="stock-icon">⚖️</div>
       <div class="stock-label">Scales</div>
       <div class="mos-display" id="scalesMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="sangoQty">0</div>
       <div class="stock-icon">💻</div>
       <div class="stock-label">Sango Computer</div>
       <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
     </div>
     <div class="stock-item">
+      <div class="quantity-small" id="lcdQty">0</div>
       <div class="stock-icon">📺</div>
       <div class="stock-label">LCD Kits</div>
       <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
     </div>
   </div>
-
   <!-- OKRs - side by side -->
   <div class="okr-row">
     <div class="okr-section">
@@ -334,7 +321,6 @@
         <span class="badge" id="bAll">All Safe! ★</span>
       </div>
     </div>
-
     <div class="okr-section">
       <div class="okr-title">Reduce Cost >20%</div>
       <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
@@ -352,7 +338,6 @@
         <span class="badge" id="b20">20%+ ★</span>
       </div>
     </div>
-
     <div class="okr-section">
       <div class="okr-title">Throttle Cash Flow</div>
       <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
@@ -390,6 +375,21 @@
     lcdKitsMOS: document.getElementById('lcdKitsMOS')
   };
 
+  const quantityElements = {
+    primaryQty: document.getElementById('primaryQty'),
+    secondaryQty: document.getElementById('secondaryQty'),
+    printerQty: document.getElementById('printerQty'),
+    tabletQty: document.getElementById('tabletQty'),
+    pinpadQty: document.getElementById('pinpadQty'),
+    dealTagQty: document.getElementById('dealTagQty'),
+    retailTagQty: document.getElementById('retailTagQty'),
+    backupQty: document.getElementById('backupQty'),
+    metalStandsQty: document.getElementById('metalStandsQty'),
+    scalesQty: document.getElementById('scalesQty'),
+    sangoQty: document.getElementById('sangoQty'),
+    lcdQty: document.getElementById('lcdQty')
+  };
+
   const itemOrder = [
     '360 Pro Primary',
     '360 Pro Secondary',
@@ -405,26 +405,46 @@
     'LCD Kits'
   ];
 
+  // Smart days calculation for safety bar
+  function updateSafetyDays() {
+    const lastIncident = new Date("2024-04-22");
+    const today = new Date();
+    const diffTime = today - lastIncident;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    document.getElementById('safetyText').textContent = `Days Since Last Incident: ${diffDays} | Safety First! 🛡️`;
+  }
+  updateSafetyDays();
+
   async function loadFromSheet() {
     try {
-      // 1. Hardware from main sheet (gid=0)
+      // Hardware from main sheet
       const hwResponse = await fetch(HARDWARE_CSV_URL);
       const hwText = await hwResponse.text();
       const hwRows = hwText.trim().split('\n').map(row => row.split(','));
       const hwData = hwRows.slice(1);
 
       const mosMap = {};
+      const qtyMap = {};
       hwData.forEach(row => {
         const item = row[0]?.trim();
+        const qty = parseInt(row[1]) || 0;
         const mos = parseFloat(row[2]) || 0;
-        if (item) mosMap[item] = mos;
+        if (item) {
+          mosMap[item] = mos;
+          qtyMap[item] = qty;
+        }
       });
 
       let safeCount = 0;
       itemOrder.forEach((item, index) => {
         const mosValue = mosMap[item] || 0;
+        const qtyValue = qtyMap[item] || 0;
+
         const mosEl = Object.values(mosElements)[index];
         mosEl.textContent = mosValue.toFixed(1) + " MOS";
+
+        const qtyEl = Object.values(quantityElements)[index];
+        qtyEl.textContent = qtyValue;
 
         mosEl.classList.remove('win', 'danger');
         if (mosValue >= 1) {
@@ -443,18 +463,18 @@
         document.getElementById('bAll').classList.add('unlocked');
       }
 
-      // 2. KPI cards from Sheet 2 (columns A=name, B=value)
+      // KPI cards from Sheet 2
       const kpiResponse = await fetch(KPI_CSV_URL);
       const kpiText = await kpiResponse.text();
       const kpiRows = kpiText.trim().split('\n').map(row => row.split(','));
-      const kpiData = kpiRows.slice(1); // skip header
+      const kpiData = kpiRows.slice(1);
 
       const kpiGrid = document.getElementById('kpiGrid');
       kpiGrid.innerHTML = '';
 
       kpiData.forEach(row => {
-        const name = row[0]?.trim();   // Column A
-        const value = row[1]?.trim();  // Column B
+        const name = row[0]?.trim();
+        const value = row[1]?.trim();
 
         if (name && value) {
           const card = document.createElement('div');
@@ -468,17 +488,17 @@
       });
 
       if (kpiGrid.children.length === 0) {
-        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPI data in Sheet 2 columns A–B</div>';
+        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPI data in Sheet 2</div>';
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs – check Sheet publish settings or link</div>';
+      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
     }
   }
 
   loadFromSheet();
 
-  // OKR 2 slider live update
+  // Sliders
   document.getElementById('costSlider').addEventListener('input', function() {
     const value = parseFloat(this.value);
     document.getElementById('costPercent').textContent = value.toFixed(1);
@@ -492,7 +512,6 @@
     document.getElementById('b20').classList.toggle('unlocked', value >= 20);
   });
 
-  // OKR 3 slider live update
   document.getElementById('cashSlider').addEventListener('input', function() {
     const value = parseInt(this.value);
     document.getElementById('cashPercent').textContent = value;
@@ -503,7 +522,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPIs from Sheet 2 columns A & B live!");
+  console.log("Dashboard loaded – KPI cards live from Sheet 2!");
 </script>
 </body>
 </html>
