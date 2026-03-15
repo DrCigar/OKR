@@ -372,6 +372,7 @@
 </div>
 
 <script>
+  const HARDWARE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
   const KPI_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1952869269&single=true&output=csv";
 
   const mosElements = {
@@ -406,8 +407,8 @@
 
   async function loadFromSheet() {
     try {
-      // Hardware from main sheet (gid=0) – unchanged
-      const hwResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv");
+      // 1. Hardware from main sheet (gid=0)
+      const hwResponse = await fetch(HARDWARE_CSV_URL);
       const hwText = await hwResponse.text();
       const hwRows = hwText.trim().split('\n').map(row => row.split(','));
       const hwData = hwRows.slice(1);
@@ -442,7 +443,7 @@
         document.getElementById('bAll').classList.add('unlocked');
       }
 
-      // KPI cards from Sheet 2 (columns A=name, B=value)
+      // 2. KPI cards from Sheet 2 (columns A=name, B=value)
       const kpiResponse = await fetch(KPI_CSV_URL);
       const kpiText = await kpiResponse.text();
       const kpiRows = kpiText.trim().split('\n').map(row => row.split(','));
@@ -471,7 +472,7 @@
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs – check Sheet publish settings</div>';
+      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs – check Sheet publish settings or link</div>';
     }
   }
 
@@ -502,7 +503,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPIs from Sheet 2 columns A & B!");
+  console.log("Dashboard loaded – KPIs from Sheet 2 columns A & B live!");
 </script>
 </body>
 </html>
