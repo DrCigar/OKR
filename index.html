@@ -73,24 +73,24 @@
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(6, 1fr); /* all 6 in one row */
+      gap: 12px;
     }
     .kpi-card {
       background: rgba(40,30,70,0.7);
       border: 2px solid #a78bfa;
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
-      min-height: 110px;
+      min-height: 90px; /* even tighter */
     }
     .kpi-name {
-      font-size: 1.1rem;
+      font-size: 1.0rem;
       color: #a78bfa;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .kpi-value {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: bold;
       color: #00ff9d;
       text-shadow: 0 0 10px #00ff9d;
@@ -135,7 +135,7 @@
       min-height: 150px;
       position: relative;
     }
-    .stock-icon { font-size: 4rem; margin: 20px 0 6px; z-index: 1; }
+    .stock-icon { font-size: 4rem; margin-bottom: 6px; z-index: 1; }
     .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; z-index: 1; }
     .mos-display {
       font-size: 1.8rem;
@@ -227,7 +227,7 @@
   <div class="header-section">
     <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
   </div>
-  <!-- KPI Cards -->
+  <!-- KPI Cards – all 6 in one row -->
   <div class="kpi-section">
     <div class="kpi-title">KPI's</div>
     <div class="kpi-grid" id="kpiGrid">
@@ -527,7 +527,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – quantity centered at top, compact KPIs!");
+  console.log("Dashboard loaded – all 6 KPIs in one row!");
 </script>
 </body>
 </html>
