@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Supply Chain Dashboard</title>
+  <title>Supply Chain Mainframe</title>
   <style>
     body {
       margin: 0;
@@ -62,37 +62,38 @@
       100% { transform: translateX(-100%); }
     }
     .kpi-section {
-      margin: 0 0 25px;
+      margin: 0 0 20px;
       text-align: center;
     }
     .kpi-title {
       color: #00ffea;
       text-shadow: 0 0 15px #00ffea;
-      font-size: 2rem;
-      margin: 0 0 12px;
+      font-size: 1.8rem;
+      margin: 0 0 10px;
     }
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
+      gap: 14px;
     }
     .kpi-card {
       background: rgba(40,30,70,0.7);
       border: 2px solid #a78bfa;
-      border-radius: 10px;
-      padding: 18px;
+      border-radius: 8px;
+      padding: 12px;
       text-align: center;
+      min-height: 110px;
     }
     .kpi-name {
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       color: #a78bfa;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .kpi-value {
-      font-size: 2.4rem;
+      font-size: 1.8rem;
       font-weight: bold;
       color: #00ff9d;
-      text-shadow: 0 0 12px #00ff9d;
+      text-shadow: 0 0 10px #00ff9d;
     }
     .arsenal-header {
       text-align: center;
@@ -134,23 +135,27 @@
       min-height: 150px;
       position: relative;
     }
-    .stock-icon { font-size: 4rem; margin-bottom: 6px; }
-    .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; }
+    .stock-icon { font-size: 4rem; margin: 20px 0 6px; z-index: 1; }
+    .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; z-index: 1; }
     .mos-display {
       font-size: 1.8rem;
       font-weight: bold;
       animation-duration: 2s;
       animation-iteration-count: infinite;
+      z-index: 1;
     }
     .mos-display.win { color: #00ff9d; animation-name: pulseGreen; }
     .mos-display.danger { color: #ff0044; animation-name: pulseRed; }
     .quantity-small {
       font-size: 0.9rem;
       color: #ffd700;
-      position: absolute;
-      top: 6px;
-      left: 8px;
       font-weight: bold;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.8;
+      z-index: 1;
     }
     @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
@@ -220,7 +225,7 @@
     </div>
   </div>
   <div class="header-section">
-    <h1 class="dashboard-title">SUPPLY CHAIN DASHBOARD</h1>
+    <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
   </div>
   <!-- KPI Cards -->
   <div class="kpi-section">
@@ -522,7 +527,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPI cards live from Sheet 2!");
+  console.log("Dashboard loaded – quantity centered at top, compact KPIs!");
 </script>
 </body>
 </html>
