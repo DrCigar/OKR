@@ -50,7 +50,7 @@
       white-space: nowrap;
       text-align: center;
       text-shadow: 0 0 8px #00ff9d;
-      margin-bottom: 6px; /* reduced space below safety bar */
+      margin-bottom: 6px;
       border-bottom: 2px solid #00ff9d;
     }
     .safety-text {
@@ -66,14 +66,26 @@
       text-align: center;
     }
     .kpi-title {
-      color: #00ffea;
-      text-shadow: 0 0 15px #00ffea;
-      font-size: 1.8rem;
-      margin: 0 0 10px;
+      color: #ffd700; /* gold like arsenal header */
+      text-shadow: 0 0 18px #ffd700;
+      font-size: 2rem;
+      margin: 0 0 8px;
+      letter-spacing: 2px;
+      position: relative;
+      display: inline-block;
+    }
+    .kpi-title::after {
+      content: '';
+      display: block;
+      width: 70%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #ffd700, #ff00aa, transparent);
+      margin: 6px auto 0;
+      box-shadow: 0 0 15px #ffd700;
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr); /* all 6 in one row */
+      grid-template-columns: repeat(6, 1fr);
       gap: 12px;
     }
     .kpi-card {
@@ -85,13 +97,20 @@
       min-height: 90px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end; /* content pushed to bottom */
+      justify-content: center; /* centered vertically */
       align-items: center;
     }
     .kpi-name {
       font-size: 1.0rem;
       color: #a78bfa;
       margin-bottom: 4px;
+      flex: 0 0 auto;
+    }
+    .kpi-value-container {
+      flex: 1;
+      display: flex;
+      align-items: flex-end; /* value pushed to bottom */
+      justify-content: center;
     }
     .kpi-value {
       font-size: 1.8rem;
@@ -231,7 +250,7 @@
   <div class="header-section">
     <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
   </div>
-  <!-- KPI Cards – all 6 in one row -->
+  <!-- KPI Cards -->
   <div class="kpi-section">
     <div class="kpi-title">KPI's</div>
     <div class="kpi-grid" id="kpiGrid">
@@ -531,7 +550,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – all 6 KPIs in one row, compact!");
+  console.log("Dashboard loaded – KPI metrics centered/bottom, less padding at top!");
 </script>
 </body>
 </html>
