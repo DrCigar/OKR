@@ -16,19 +16,57 @@
         linear-gradient(rgba(20,0,40,0.85), rgba(20,0,40,0.85)),
         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23110022"/><path d="M0 0h2v2H0zM62 62h2v2h-2z" fill="%23330066"/></svg>');
       background-size: 64px 64px;
+      position: relative;
+      overflow: hidden;
     }
+
+    /* POS360 sphere background – more visible, no blur */
+    .bg-sphere {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://pos360.com/wp-content/uploads/2024/05/POS360-sphere.png') center center / contain no-repeat;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: -2;
+      filter: brightness(1.1) contrast(1.15);
+    }
+
+    /* Stronger centered glow pulse */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(0, 255, 234, 0.35) 0%,
+        rgba(255, 0, 170, 0.28) 40%,
+        transparent 75%
+      );
+      pointer-events: none;
+      z-index: -1;
+      animation: glowPulseStrong 8s infinite alternate ease-in-out;
+    }
+
+    @keyframes glowPulseStrong {
+      0%   { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 1.0; transform: scale(1.08); }
+    }
+
     .container {
       max-width: 100%;
       padding: 20px;
-      background: rgba(10, 5, 30, 0.7);
+      background: rgba(10, 5, 30, 0.75); /* slightly more opaque for readability */
       border: 4px solid #00ffea;
       border-image: linear-gradient(to right, #00ffea, #ff00aa) 1;
       box-shadow: 0 0 30px rgba(0,255,234,0.3);
+      position: relative;
+      z-index: 1;
     }
-    .header-section {
-      text-align: center;
-      margin-bottom: 15px;
-    }
+
+    .header-section { text-align: center; margin-bottom: 15px; }
     .dashboard-title {
       color: #00ffea;
       text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa;
@@ -66,11 +104,10 @@
       text-align: center;
     }
     .kpi-title {
-      color: #ffd700; /* gold like arsenal header */
+      color: #ffd700;
       text-shadow: 0 0 18px #ffd700;
-      font-size: 2rem;
-      margin: 0 0 8px;
-      letter-spacing: 2px;
+      font-size: 1.8rem;
+      margin: 0 0 10px;
       position: relative;
       display: inline-block;
     }
@@ -97,20 +134,13 @@
       min-height: 90px;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* centered vertically */
+      justify-content: center;
       align-items: center;
     }
     .kpi-name {
       font-size: 1.0rem;
       color: #a78bfa;
       margin-bottom: 4px;
-      flex: 0 0 auto;
-    }
-    .kpi-value-container {
-      flex: 1;
-      display: flex;
-      align-items: flex-end; /* value pushed to bottom */
-      justify-content: center;
     }
     .kpi-value {
       font-size: 1.8rem;
@@ -241,148 +271,156 @@
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="safety-bar">
-    <div class="safety-text" id="safetyText">
-      Days Since Last Incident: Calculating... | Safety First! 🛡️
+  <!-- Background sphere + stronger glow -->
+  <div class="bg-sphere"></div>
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <div class="safety-bar">
+      <div class="safety-text" id="safetyText">
+        Days Since Last Incident: Calculating... | Safety First! 🛡️
+      </div>
+    </div>
+
+    <div class="header-section">
+      <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-section">
+      <div class="kpi-title">KPI's</div>
+      <div class="kpi-grid" id="kpiGrid">
+        <!-- Filled live from Sheet 2 -->
+      </div>
+    </div>
+
+    <!-- Hardware Arsenal -->
+    <div class="arsenal-header">
+      <div class="arsenal-title">HARDWARE ARSENAL</div>
+    </div>
+    <div class="stock-grid">
+      <div class="stock-item">
+        <div class="quantity-small" id="primaryQty">0</div>
+        <div class="stock-icon">🧠</div>
+        <div class="stock-label">360 Pro Primary</div>
+        <div class="mos-display" id="primaryMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="secondaryQty">0</div>
+        <div class="stock-icon">②</div>
+        <div class="stock-label">360 Pro Secondary</div>
+        <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="printerQty">0</div>
+        <div class="stock-icon">🖨️</div>
+        <div class="stock-label">Receipt Printers</div>
+        <div class="mos-display" id="printerMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="tabletQty">0</div>
+        <div class="stock-icon">📱</div>
+        <div class="stock-label">Tablets</div>
+        <div class="mos-display" id="tabletMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="pinpadQty">0</div>
+        <div class="stock-icon">💳</div>
+        <div class="stock-label">Pin Pads</div>
+        <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="dealTagQty">0</div>
+        <div class="stock-icon">🏷️</div>
+        <div class="stock-label">Deal Tag Printer</div>
+        <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
+      </div>
+    </div>
+    <div class="stock-grid">
+      <div class="stock-item">
+        <div class="quantity-small" id="retailTagQty">0</div>
+        <div class="stock-icon">🏷️</div>
+        <div class="stock-label">Retail Tag Printer</div>
+        <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="backupQty">0</div>
+        <div class="stock-icon">🔋</div>
+        <div class="stock-label">Backup Battery</div>
+        <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="metalStandsQty">0</div>
+        <div class="stock-icon">🛠️</div>
+        <div class="stock-label">Metal Stands</div>
+        <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="scalesQty">0</div>
+        <div class="stock-icon">⚖️</div>
+        <div class="stock-label">Scales</div>
+        <div class="mos-display" id="scalesMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="sangoQty">0</div>
+        <div class="stock-icon">💻</div>
+        <div class="stock-label">Sango Computer</div>
+        <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
+      </div>
+      <div class="stock-item">
+        <div class="quantity-small" id="lcdQty">0</div>
+        <div class="stock-icon">📺</div>
+        <div class="stock-label">LCD Kits</div>
+        <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
+      </div>
+    </div>
+
+    <!-- OKRs - side by side -->
+    <div class="okr-row">
+      <div class="okr-section">
+        <div class="okr-title">All Categories ≥ 1 MOS</div>
+        <div id="okr1Status" style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
+          <span id="okr1Count">0</span> of 12 safe
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="prog1"></div></div>
+        <div class="badge-container">
+          <span class="badge" id="bAll">All Safe! ★</span>
+        </div>
+      </div>
+      <div class="okr-section">
+        <div class="okr-title">Reduce Cost >20%</div>
+        <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
+          Reduction Achieved: <span id="costPercent">0</span>%
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="prog2"></div>
+          <input type="range" id="costSlider" min="0" max="30" value="0" step="0.1">
+        </div>
+        <div class="badge-container">
+          <span class="badge" id="b2">2%</span>
+          <span class="badge" id="b5">5%</span>
+          <span class="badge" id="b10">10%</span>
+          <span class="badge" id="b15">15%</span>
+          <span class="badge" id="b20">20%+ ★</span>
+        </div>
+      </div>
+      <div class="okr-section">
+        <div class="okr-title">Throttle Cash Flow</div>
+        <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
+          Cash Flow Control Level: <span id="cashPercent">30</span>%
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="prog3"></div>
+          <input type="range" id="cashSlider" min="0" max="100" value="30">
+        </div>
+        <div class="badge-container">
+          <span class="badge" id="b60c">60%+</span>
+          <span class="badge" id="b85c">85%+</span>
+          <span class="badge" id="b95c">95%+</span>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="header-section">
-    <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
-  </div>
-  <!-- KPI Cards -->
-  <div class="kpi-section">
-    <div class="kpi-title">KPI's</div>
-    <div class="kpi-grid" id="kpiGrid">
-      <!-- Filled live from Sheet 2 -->
-    </div>
-  </div>
-  <!-- Hardware Arsenal -->
-  <div class="arsenal-header">
-    <div class="arsenal-title">HARDWARE ARSENAL</div>
-  </div>
-  <div class="stock-grid">
-    <div class="stock-item">
-      <div class="quantity-small" id="primaryQty">0</div>
-      <div class="stock-icon">🧠</div>
-      <div class="stock-label">360 Pro Primary</div>
-      <div class="mos-display" id="primaryMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="secondaryQty">0</div>
-      <div class="stock-icon">②</div>
-      <div class="stock-label">360 Pro Secondary</div>
-      <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="printerQty">0</div>
-      <div class="stock-icon">🖨️</div>
-      <div class="stock-label">Receipt Printers</div>
-      <div class="mos-display" id="printerMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="tabletQty">0</div>
-      <div class="stock-icon">📱</div>
-      <div class="stock-label">Tablets</div>
-      <div class="mos-display" id="tabletMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="pinpadQty">0</div>
-      <div class="stock-icon">💳</div>
-      <div class="stock-label">Pin Pads</div>
-      <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="dealTagQty">0</div>
-      <div class="stock-icon">🏷️</div>
-      <div class="stock-label">Deal Tag Printer</div>
-      <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
-    </div>
-  </div>
-  <div class="stock-grid">
-    <div class="stock-item">
-      <div class="quantity-small" id="retailTagQty">0</div>
-      <div class="stock-icon">🏷️</div>
-      <div class="stock-label">Retail Tag Printer</div>
-      <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="backupQty">0</div>
-      <div class="stock-icon">🔋</div>
-      <div class="stock-label">Backup Battery</div>
-      <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="metalStandsQty">0</div>
-      <div class="stock-icon">🛠️</div>
-      <div class="stock-label">Metal Stands</div>
-      <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="scalesQty">0</div>
-      <div class="stock-icon">⚖️</div>
-      <div class="stock-label">Scales</div>
-      <div class="mos-display" id="scalesMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="sangoQty">0</div>
-      <div class="stock-icon">💻</div>
-      <div class="stock-label">Sango Computer</div>
-      <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
-    </div>
-    <div class="stock-item">
-      <div class="quantity-small" id="lcdQty">0</div>
-      <div class="stock-icon">📺</div>
-      <div class="stock-label">LCD Kits</div>
-      <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
-    </div>
-  </div>
-  <!-- OKRs - side by side -->
-  <div class="okr-row">
-    <div class="okr-section">
-      <div class="okr-title">All Categories ≥ 1 MOS</div>
-      <div id="okr1Status" style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
-        <span id="okr1Count">0</span> of 12 safe
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="prog1"></div></div>
-      <div class="badge-container">
-        <span class="badge" id="bAll">All Safe! ★</span>
-      </div>
-    </div>
-    <div class="okr-section">
-      <div class="okr-title">Reduce Cost >20%</div>
-      <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
-        Reduction Achieved: <span id="costPercent">0</span>%
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="prog2"></div>
-        <input type="range" id="costSlider" min="0" max="30" value="0" step="0.1">
-      </div>
-      <div class="badge-container">
-        <span class="badge" id="b2">2%</span>
-        <span class="badge" id="b5">5%</span>
-        <span class="badge" id="b10">10%</span>
-        <span class="badge" id="b15">15%</span>
-        <span class="badge" id="b20">20%+ ★</span>
-      </div>
-    </div>
-    <div class="okr-section">
-      <div class="okr-title">Throttle Cash Flow</div>
-      <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
-        Cash Flow Control Level: <span id="cashPercent">30</span>%
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="prog3"></div>
-        <input type="range" id="cashSlider" min="0" max="100" value="30">
-      </div>
-      <div class="badge-container">
-        <span class="badge" id="b60c">60%+</span>
-        <span class="badge" id="b85c">85%+</span>
-        <span class="badge" id="b95c">95%+</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
   const HARDWARE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
@@ -550,7 +588,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPI metrics centered/bottom, less padding at top!");
+  console.log("Dashboard loaded – sphere background more visible, no blur!");
 </script>
 </body>
 </html>
