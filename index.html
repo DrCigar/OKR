@@ -412,11 +412,12 @@
 
       const dataRows = rows.slice(1);
 
+      // 1. Hardware MOS (columns A=0, C=2)
       const mosMap = {};
       dataRows.forEach(row => {
-        const item = row[0].trim();
+        const item = row[0]?.trim();
         const mos = parseFloat(row[2]) || 0;
-        mosMap[item] = mos;
+        if (item) mosMap[item] = mos;
       });
 
       let safeCount = 0;
@@ -441,14 +442,38 @@
       if (safeCount === 12) {
         document.getElementById('bAll').classList.add('unlocked');
       }
+
+      // 2. KPI cards from columns F (name, index 5) & G (value, index 6)
+      const kpiGrid = document.getElementById('kpiGrid');
+      kpiGrid.innerHTML = '';
+
+      dataRows.forEach(row => {
+        const name = row[5]?.trim();  // Column F
+        const value = row[6]?.trim(); // Column G
+
+        if (name && value) {
+          const card = document.createElement('div');
+          card.className = 'kpi-card';
+          card.innerHTML = `
+            <div class="kpi-name">${name}</div>
+            <div class="kpi-value">${value}</div>
+          `;
+          kpiGrid.appendChild(card);
+        }
+      });
+
+      if (kpiGrid.children.length === 0) {
+        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPIs found in columns F–G</div>';
+      }
     } catch (error) {
       console.error("Error loading sheet:", error);
+      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Error loading KPIs – check Sheet link</div>';
     }
   }
 
   loadFromSheet();
 
-  // OKR 2 slider live update
+  // OKR 2 slider
   document.getElementById('costSlider').addEventListener('input', function() {
     const value = parseFloat(this.value);
     document.getElementById('costPercent').textContent = value.toFixed(1);
@@ -462,7 +487,7 @@
     document.getElementById('b20').classList.toggle('unlocked', value >= 20);
   });
 
-  // OKR 3 slider live update
+  // OKR 3 slider
   document.getElementById('cashSlider').addEventListener('input', function() {
     const value = parseInt(this.value);
     document.getElementById('cashPercent').textContent = value;
@@ -473,7 +498,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Supply Chain Dashboard loaded – 3-across KPIs, smaller fonts!");
+  console.log("Dashboard loaded – KPIs from F–G live, sliders start at 0!");
 </script>
 </body>
 </html>
