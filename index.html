@@ -372,17 +372,8 @@
 </div>
 
 <script>
-  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
-
-  // Your exact KPI names (case-insensitive match)
-  const kpiNames = [
-    "Shipping Accuracy",
-    "On Time Fulfillment",
-    "Inventory Accuracy",
-    "On Time PO %",
-    "Average Delivery Time",
-    "All Time Stock Outs"
-  ];
+  const HARDWARE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
+  const KPI_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1952869269&single=true&output=csv";
 
   const mosElements = {
     primaryMOS: document.getElementById('primaryMOS'),
@@ -416,15 +407,14 @@
 
   async function loadFromSheet() {
     try {
-      const response = await fetch(CSV_URL);
-      const csvText = await response.text();
-      const rows = csvText.trim().split('\n').map(row => row.split(','));
+      // Hardware from main sheet (gid=0)
+      const hwResponse = await fetch(HARDWARE_CSV_URL);
+      const hwText = await hwResponse.text();
+      const hwRows = hwText.trim().split('\n').map(row => row.split(','));
+      const hwData = hwRows.slice(1);
 
-      const dataRows = rows.slice(1); // skip header row
-
-      // 1. Hardware MOS (columns A=0, C=2)
       const mosMap = {};
-      dataRows.forEach(row => {
+      hwData.forEach(row => {
         const item = row[0]?.trim();
         const mos = parseFloat(row[2]) || 0;
         if (item) mosMap[item] = mos;
@@ -453,46 +443,36 @@
         document.getElementById('bAll').classList.add('unlocked');
       }
 
-      // 2. KPI cards – look specifically for your names in column F (index 5), value in G (index 6)
+      // KPIs from Sheet 2 (gid=1952869269), columns A (name) & B (value)
+      const kpiResponse = await fetch(KPI_CSV_URL);
+      const kpiText = await kpiResponse.text();
+      const kpiRows = kpiText.trim().split('\n').map(row => row.split(','));
+      const kpiData = kpiRows.slice(1);
+
       const kpiGrid = document.getElementById('kpiGrid');
-      kpiGrid.innerHTML = ''; // clear any previous cards
+      kpiGrid.innerHTML = '';
 
-      const foundKPIs = {};
+      kpiData.forEach(row => {
+        const name = row[0]?.trim();   // Column A
+        const value = row[1]?.trim();  // Column B
 
-      dataRows.forEach(row => {
-        const nameRaw = row[5]?.trim(); // Column F
-        if (!nameRaw) return;
-
-        // Normalize name for matching (trim, lower case, remove extra spaces)
-        const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
-
-        // Check if this row matches one of your KPIs
-        const matchedKPI = kpiNames.find(kpi => nameLower.includes(kpi.toLowerCase()));
-        if (matchedKPI) {
-          const value = row[6]?.trim() || 'N/A'; // Column G
-          foundKPIs[matchedKPI] = value;
+        if (name && value) {
+          const card = document.createElement('div');
+          card.className = 'kpi-card';
+          card.innerHTML = `
+            <div class="kpi-name">${name}</div>
+            <div class="kpi-value">${value}</div>
+          `;
+          kpiGrid.appendChild(card);
         }
       });
 
-      // Display cards in your requested order
-      kpiNames.forEach(kpiName => {
-        const value = foundKPIs[kpiName] || 'N/A';
-        const card = document.createElement('div');
-        card.className = 'kpi-card';
-        card.innerHTML = `
-          <div class="kpi-name">${kpiName}</div>
-          <div class="kpi-value">${value}</div>
-        `;
-        kpiGrid.appendChild(card);
-      });
-
-      // If no KPIs were found at all
-      if (Object.keys(foundKPIs).length === 0) {
-        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No matching KPIs found in column F</div>';
+      if (kpiGrid.children.length === 0) {
+        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPIs found in Sheet 2 columns A–B</div>';
       }
     } catch (error) {
       console.error("Error loading sheet:", error);
-      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Error loading KPIs – check Sheet link or publish settings</div>';
+      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Error loading KPIs – check Sheet 2 link</div>';
     }
   }
 
@@ -523,7 +503,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPIs from column F/G matched & displayed!");
+  console.log("Dashboard loaded – KPIs from Sheet 2 A–B live!");
 </script>
 </body>
 </html>
