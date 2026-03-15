@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Q1 Supply Chain Quest ⚔️📦</title>
+  <title>Supply Chain Dashboard</title>
   <style>
     body {
       margin: 0;
@@ -25,34 +25,33 @@
       border-image: linear-gradient(to right, #00ffea, #ff00aa) 1;
       box-shadow: 0 0 30px rgba(0,255,234,0.3);
     }
-    .header-section { text-align: center; margin-bottom: 20px; }
-    .quest-title {
+    .header-section {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .dashboard-title {
       color: #00ffea;
       text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa;
-      font-size: 4.8rem;
+      font-size: 3.2rem; /* smaller title */
       margin: 0;
-      letter-spacing: 8px;
+      letter-spacing: 6px;
+      animation: pulseGlow 3.5s infinite;
     }
-    .pos360-logo {
-      max-width: 400px;
-      display: block;
-      margin: 15px auto;
-      filter: drop-shadow(0 0 25px #00ffea) brightness(1.2);
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa; }
+      50% { opacity: 0.85; text-shadow: 0 0 15px #00ffea, 0 0 30px #ff00aa; }
     }
-    .subtitle { color: #a78bfa; font-size: 1.7rem; margin: 5px 0 20px; }
-
-    .motivation { text-align: center; font-size: 1.9rem; margin: 20px 0; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
 
     .safety-bar {
       background: #1a0033;
       color: #00ff9d;
-      font-size: 1.8rem;
-      padding: 12px 0;
+      font-size: 1.2rem; /* smaller scrolling bar font */
+      padding: 8px 0; /* reduced padding */
       overflow: hidden;
       white-space: nowrap;
       text-align: center;
-      text-shadow: 0 0 10px #00ff9d;
-      margin-bottom: 15px;
+      text-shadow: 0 0 8px #00ff9d;
+      margin-bottom: 12px;
       border-bottom: 2px solid #00ff9d;
     }
     .safety-text {
@@ -64,50 +63,84 @@
       100% { transform: translateX(-100%); }
     }
 
+    .kpi-section {
+      margin: 0 0 25px;
+      text-align: center;
+    }
+    .kpi-title {
+      color: #00ffea;
+      text-shadow: 0 0 15px #00ffea;
+      font-size: 2rem;
+      margin: 0 0 12px;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* fixed 3 across */
+      gap: 18px;
+    }
+    .kpi-card {
+      background: rgba(40,30,70,0.7);
+      border: 2px solid #a78bfa;
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+    }
+    .kpi-name {
+      font-size: 1.4rem;
+      color: #a78bfa;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 2.4rem;
+      font-weight: bold;
+      color: #00ff9d;
+      text-shadow: 0 0 12px #00ff9d;
+    }
+
     .arsenal-header {
       text-align: center;
-      margin: 30px 0 15px;
+      margin: 25px 0 12px;
     }
     .arsenal-title {
       color: #ffd700;
-      font-size: 3.2rem;
-      text-shadow: 0 0 20px #ffd700;
-      letter-spacing: 4px;
+      font-size: 2.8rem;
+      text-shadow: 0 0 18px #ffd700;
+      letter-spacing: 3px;
       animation: glowPulse 3s infinite;
     }
     .arsenal-title::after {
       content: '';
       display: block;
       width: 40%;
-      height: 4px;
+      height: 3px;
       background: linear-gradient(to right, transparent, #ffd700, #ff00aa, transparent);
-      margin: 10px auto;
-      box-shadow: 0 0 20px #ffd700;
+      margin: 8px auto;
+      box-shadow: 0 0 18px #ffd700;
     }
 
     .stock-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 20px;
+      gap: 18px;
       justify-items: center;
       margin-bottom: 20px;
     }
     .stock-item {
       background: rgba(30,20,60,0.7);
       border: 3px solid #00ffea;
-      border-radius: 12px;
-      padding: 15px;
+      border-radius: 10px;
+      padding: 12px;
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      min-height: 180px;
+      min-height: 150px; /* smaller box height */
     }
-    .stock-icon { font-size: 4.5rem; margin-bottom: 8px; }
-    .stock-label { font-size: 1.3rem; color: #a78bfa; margin-bottom: 8px; }
+    .stock-icon { font-size: 4rem; margin-bottom: 6px; }
+    .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; }
     .mos-display {
-      font-size: 2.2rem;
+      font-size: 1.8rem; /* smaller MOS font */
       font-weight: bold;
       animation-duration: 2s;
       animation-iteration-count: infinite;
@@ -117,30 +150,29 @@
 
     @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    @keyframes titlePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.9; } }
-    @keyframes glowPulse { 0%,100% { text-shadow: 0 0 20px #ffd700; } 50% { text-shadow: 0 0 35px #ffd700; } }
+    @keyframes glowPulse { 0%,100% { text-shadow: 0 0 18px #ffd700; } 50% { text-shadow: 0 0 30px #ffd700; } }
 
     .okr-row {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
-      margin: 30px 0;
+      gap: 18px;
+      margin: 25px 0;
     }
     .okr-section {
       flex: 1;
-      padding: 20px;
+      padding: 18px;
       background: rgba(30,20,60,0.6);
       border: 4px solid #a78bfa;
-      border-radius: 12px;
+      border-radius: 10px;
     }
-    .okr-title { color: #ff00aa; font-size: 1.9rem; margin: 0 0 12px; text-shadow: 0 0 10px #ff00aa; }
+    .okr-title { color: #ff00aa; font-size: 1.8rem; margin: 0 0 10px; text-shadow: 0 0 8px #ff00aa; }
     .progress-bar {
-      height: 30px;
+      height: 28px;
       background: #111133;
       border: 2px solid #ffd700;
       border-radius: 8px;
       overflow: hidden;
-      margin: 10px 0;
+      margin: 8px 0;
       position: relative;
       cursor: pointer;
     }
@@ -154,7 +186,7 @@
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 30px;
+      height: 28px;
       background: transparent;
       position: absolute;
       top: 0;
@@ -172,9 +204,9 @@
       height: 0;
       background: transparent;
     }
-    .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
-    .badge { padding: 8px 14px; font-size: 1rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 16px; transition: all 0.4s; }
-    .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 15px #ffd700aa; transform: scale(1.05); font-weight: bold; }
+    .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+    .badge { padding: 6px 12px; font-size: 0.95rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 14px; transition: all 0.4s; }
+    .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 12px #ffd700aa; transform: scale(1.05); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -187,12 +219,39 @@
   </div>
 
   <div class="header-section">
-    <h1 class="quest-title">Q1 SUPPLY CHAIN QUEST</h1>
-    <img src="https://i.ibb.co/Xkx7jHRm/Screen-Shot-2025-10-19-at-10-30-14-AM.jpg" alt="POS360 Official Logo" class="pos360-logo">
-    <p class="subtitle">Enough inventory to support Sales & Onboarding needs – Powered by POS360 • 2026</p>
+    <h1 class="dashboard-title">SUPPLY CHAIN DASHBOARD</h1>
   </div>
 
-  <div class="motivation">QUEST ACTIVE</div>
+  <!-- KPI Cards – fixed 3 across, your list -->
+  <div class="kpi-section">
+    <div class="kpi-title">KPI's</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-name">Shipping Accuracy</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-name">On Time Fulfillment</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-name">Inventory Accuracy</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-name">On Time PO %</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-name">Average Delivery Time</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-name">All Time Stock Outs</div>
+        <div class="kpi-value">[Value]</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Hardware Arsenal -->
   <div class="arsenal-header">
@@ -266,7 +325,7 @@
   <!-- OKRs - side by side -->
   <div class="okr-row">
     <div class="okr-section">
-      <div class="okr-title">OKR 1: All Categories ≥ 1 MOS</div>
+      <div class="okr-title">All Categories ≥ 1 MOS</div>
       <div id="okr1Status" style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
         <span id="okr1Count">0</span> of 12 safe
       </div>
@@ -277,7 +336,7 @@
     </div>
 
     <div class="okr-section">
-      <div class="okr-title">OKR 2: Reduce Cost >20%</div>
+      <div class="okr-title">Reduce Cost >20%</div>
       <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
         Reduction Achieved: <span id="costPercent">0</span>%
       </div>
@@ -295,13 +354,13 @@
     </div>
 
     <div class="okr-section">
-      <div class="okr-title">OKR 3: Throttle Cash Flow</div>
+      <div class="okr-title">Throttle Cash Flow</div>
       <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
         Cash Flow Control Level: <span id="cashPercent">30</span>%
       </div>
       <div class="progress-bar">
         <div class="progress-fill" id="prog3"></div>
-        <input type="range" id="cashSlider" min="0" max="100" value="0">
+        <input type="range" id="cashSlider" min="0" max="100" value="30">
       </div>
       <div class="badge-container">
         <span class="badge" id="b60c">60%+</span>
@@ -414,31 +473,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Q1 Supply Chain Quest loaded – sliders start at 0, fully interactive!");
-
-  // ─────────────── Safety Days Counter ───────────────
-function updateSafetyDays() {
-  // ← Change this date to your actual last incident date
-  const lastIncident = new Date("2024-06-15");   // ← example: June 15, 2024
-
-  const today = new Date();
-  const diffTime = today - lastIncident;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  const safetyText = document.querySelector('.safety-text');
-  safetyText.textContent = `Days Since Last Incident: ${diffDays} | Safety First! 🛡️`;
-}
-
-// Run once on page load
-updateSafetyDays();
-
-// Optional: re-check every midnight (not strictly needed for most cases)
-setInterval(() => {
-  const now = new Date();
-  if (now.getHours() === 0 && now.getMinutes() === 0) {
-    updateSafetyDays();
-  }
-}, 60000);
+  console.log("Supply Chain Dashboard loaded – 3-across KPIs, smaller fonts!");
 </script>
 </body>
 </html>
