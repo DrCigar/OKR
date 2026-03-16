@@ -543,7 +543,7 @@
 
         if (!nameRaw || !valueRaw) return;
 
-        // Clean and parse numeric percentage (handles "97.50%", "99 %", "90.0", etc.)
+        // Clean and parse numeric percentage
         const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, ''));
 
         // Determine color class based on KPI name
@@ -579,6 +579,33 @@
       if (kpiGrid.children.length === 0) {
         kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPI data in Sheet 2</div>';
       }
+
+      // Auto-set OKR sliders after load
+      // OKR 2: Reduce Cost >20% → auto to 10%
+      const costSlider = document.getElementById('costSlider');
+      costSlider.value = 10;
+      document.getElementById('costPercent').textContent = '10.0';
+      const costVisualPct = Math.min(100, (10 / 30) * 100);
+      document.getElementById('prog2').style.width = costVisualPct + '%';
+
+      // Trigger badge update for 10%
+      document.getElementById('b2').classList.toggle('unlocked', 10 >= 2);
+      document.getElementById('b5').classList.toggle('unlocked', 10 >= 5);
+      document.getElementById('b10').classList.toggle('unlocked', 10 >= 10);
+      document.getElementById('b15').classList.toggle('unlocked', 10 >= 15);
+      document.getElementById('b20').classList.toggle('unlocked', 10 >= 20);
+
+      // OKR 3: Throttle Cash Flow → auto to 70%
+      const cashSlider = document.getElementById('cashSlider');
+      cashSlider.value = 70;
+      document.getElementById('cashPercent').textContent = '70';
+      document.getElementById('prog3').style.width = '70%';
+
+      // Trigger badge update for 70%
+      document.getElementById('b60c').classList.toggle('unlocked', 70 >= 60);
+      document.getElementById('b85c').classList.toggle('unlocked', 70 >= 85);
+      document.getElementById('b95c').classList.toggle('unlocked', 70 >= 95);
+
     } catch (error) {
       console.error("Error loading data:", error);
       document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
@@ -587,7 +614,7 @@
 
   loadFromSheet();
 
-  // Sliders
+  // Sliders (manual drag still works after auto-set)
   document.getElementById('costSlider').addEventListener('input', function() {
     const value = parseFloat(this.value);
     document.getElementById('costPercent').textContent = value.toFixed(1);
@@ -611,7 +638,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – Stock Out Frequency inverted (0-2% green, 2-4% orange, >4% red)!");
+  console.log("Dashboard loaded – OKR 2 auto at 10%, OKR 3 auto at 70%!");
 </script>
 </body>
 </html>
