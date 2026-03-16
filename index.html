@@ -21,7 +21,6 @@
       position: relative;
     }
 
-    /* Background sphere + glow */
     .bg-sphere {
       position: fixed;
       inset: 0;
@@ -135,16 +134,18 @@
       align-items: center;
     }
     .kpi-name {
-      font-size: 1.1rem;
+      font-size: 1.0rem;
       color: #a78bfa;
       margin-bottom: 4px;
     }
     .kpi-value {
-      font-size: 1.8rem; /* matched to MOS font size */
+      font-size: 1.8rem;
       font-weight: bold;
-      color: #00ff9d;
-      text-shadow: 0 0 10px #00ff9d;
+      text-shadow: 0 0 10px currentColor;
     }
+    .kpi-value.high { color: #00ff9d; }
+    .kpi-value.medium { color: #ffaa00; }
+    .kpi-value.low { color: #ff0044; }
     .arsenal-header {
       text-align: center;
       margin: 25px 0 12px;
@@ -538,17 +539,18 @@
 
       kpiData.forEach(row => {
         const name = row[0]?.trim();
-        const value = row[1]?.trim();
+        const valueRaw = row[1]?.trim() || '';
 
-        if (name && value) {
-          const card = document.createElement('div');
-          card.className = 'kpi-card';
-          card.innerHTML = `
-            <div class="kpi-name">${name}</div>
-            <div class="kpi-value">${value}</div>
-          `;
-          kpiGrid.appendChild(card);
-        }
+        // Extract numeric percentage from value (handles "97.50%", "99%", "90.0 %", etc.)
+        const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, ''));
+
+        const card = document.createElement('div');
+        card.className = 'kpi-card';
+        card.innerHTML = `
+          <div class="kpi-name">${name}</div>
+          <div class="kpi-value ${getKpiClass(valueNum)}">${valueRaw}</div>
+        `;
+        kpiGrid.appendChild(card);
       });
 
       if (kpiGrid.children.length === 0) {
@@ -558,6 +560,14 @@
       console.error("Error loading data:", error);
       document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
     }
+  }
+
+  // Color class function for KPI values
+  function getKpiClass(percent) {
+    if (isNaN(percent)) return '';
+    if (percent >= 97) return 'high';
+    if (percent >= 93) return 'medium';
+    return 'low';
   }
 
   loadFromSheet();
@@ -586,7 +596,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPI fonts matched to MOS size!");
+  console.log("Dashboard loaded – KPI cards color-coded (≥97% green, 93-97% orange, <93% red)!");
 </script>
 </body>
 </html>
