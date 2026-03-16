@@ -543,17 +543,17 @@
 
         if (!nameRaw || !valueRaw) return;
 
-        // Clean and parse numeric value (handles "97.50%", "99 %", "90.0", etc.)
+        // Clean and parse numeric percentage (handles "97.50%", "99 %", "90.0", etc.)
         const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, ''));
 
         // Determine color class based on KPI name
         let colorClass = '';
         const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
 
-        if (nameLower.includes('all time stock outs') || nameLower.includes('stock outs')) {
-          // Inverted for stock outs
-          if (valueNum <= 3) colorClass = 'high';      // green
-          else if (valueNum < 5) colorClass = 'medium'; // orange
+        if (nameLower.includes('stock out frequency') || nameLower.includes('stock outs') || nameLower.includes('all time stock outs')) {
+          // Inverted for Stock Out Frequency
+          if (valueNum <= 2) colorClass = 'high';      // green
+          else if (valueNum <= 4) colorClass = 'medium'; // orange
           else colorClass = 'low';                      // red
         } else if (nameLower.includes('on time po') || nameLower.includes('on time po %')) {
           // Custom for On Time PO %
@@ -611,7 +611,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPI cards with updated color thresholds!");
+  console.log("Dashboard loaded – Stock Out Frequency inverted (0-2% green, 2-4% orange, >4% red)!");
 </script>
 </body>
 </html>
