@@ -537,34 +537,51 @@
       const kpiGrid = document.getElementById('kpiGrid');
       kpiGrid.innerHTML = '';
 
+      // Calculate stock health % once (for any matching KPI card)
+      const stockHealthPct = (safeCount / 12) * 100;
+      const stockHealthClass = stockHealthPct >= 97 ? 'high' :
+                               stockHealthPct >= 93 ? 'medium' : 'low';
+
       kpiData.forEach(row => {
         const nameRaw = row[0]?.trim() || '';
-        const valueRaw = row[1]?.trim() || '';
+        let valueRaw = row[1]?.trim() || '';
 
-        if (!nameRaw || !valueRaw) return;
+        if (!nameRaw) return;
 
-        // Clean and parse numeric percentage
-        const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, ''));
-
-        // Determine color class based on KPI name
-        let colorClass = '';
         const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
 
+        // Special case: Stock Health / MOS % KPI
+        if (nameLower.includes('stock health') || 
+            nameLower.includes('supply chain stock') || 
+            nameLower.includes('mos') || 
+            nameLower.includes('months of supply')) {
+          valueRaw = stockHealthPct.toFixed(0) + '%';
+          const card = document.createElement('div');
+          card.className = 'kpi-card';
+          card.innerHTML = `
+            <div class="kpi-name">${nameRaw}</div>
+            <div class="kpi-value ${stockHealthClass}">${valueRaw}</div>
+          `;
+          kpiGrid.appendChild(card);
+          return;
+        }
+
+        // Normal KPI logic (with value from sheet)
+        const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, '')) || 0;
+
+        let colorClass = '';
         if (nameLower.includes('stock out frequency') || nameLower.includes('stock outs') || nameLower.includes('all time stock outs')) {
-          // Inverted for Stock Out Frequency
-          if (valueNum <= 2) colorClass = 'high';      // green
-          else if (valueNum <= 4) colorClass = 'medium'; // orange
-          else colorClass = 'low';                      // red
+          if (valueNum <= 2) colorClass = 'high';
+          else if (valueNum <= 4) colorClass = 'medium';
+          else colorClass = 'low';
         } else if (nameLower.includes('on time po') || nameLower.includes('on time po %')) {
-          // Custom for On Time PO %
-          if (valueNum >= 90) colorClass = 'high';     // green
-          else if (valueNum >= 80) colorClass = 'medium'; // orange
-          else colorClass = 'low';                      // red
+          if (valueNum >= 90) colorClass = 'high';
+          else if (valueNum >= 80) colorClass = 'medium';
+          else colorClass = 'low';
         } else {
-          // Default for all other KPIs
-          if (valueNum >= 97) colorClass = 'high';     // green
-          else if (valueNum >= 93) colorClass = 'medium'; // orange
-          else colorClass = 'low';                      // red
+          if (valueNum >= 97) colorClass = 'high';
+          else if (valueNum >= 93) colorClass = 'medium';
+          else colorClass = 'low';
         }
 
         const card = document.createElement('div');
@@ -579,33 +596,6 @@
       if (kpiGrid.children.length === 0) {
         kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPI data in Sheet 2</div>';
       }
-
-      // Auto-set OKR sliders after load
-      // OKR 2: Reduce Cost >20% → auto to 10%
-      const costSlider = document.getElementById('costSlider');
-      costSlider.value = 10;
-      document.getElementById('costPercent').textContent = '10.0';
-      const costVisualPct = Math.min(100, (10 / 30) * 100);
-      document.getElementById('prog2').style.width = costVisualPct + '%';
-
-      // Trigger badge update for 10%
-      document.getElementById('b2').classList.toggle('unlocked', 10 >= 2);
-      document.getElementById('b5').classList.toggle('unlocked', 10 >= 5);
-      document.getElementById('b10').classList.toggle('unlocked', 10 >= 10);
-      document.getElementById('b15').classList.toggle('unlocked', 10 >= 15);
-      document.getElementById('b20').classList.toggle('unlocked', 10 >= 20);
-
-      // OKR 3: Throttle Cash Flow → auto to 70%
-      const cashSlider = document.getElementById('cashSlider');
-      cashSlider.value = 70;
-      document.getElementById('cashPercent').textContent = '70';
-      document.getElementById('prog3').style.width = '70%';
-
-      // Trigger badge update for 70%
-      document.getElementById('b60c').classList.toggle('unlocked', 70 >= 60);
-      document.getElementById('b85c').classList.toggle('unlocked', 70 >= 85);
-      document.getElementById('b95c').classList.toggle('unlocked', 70 >= 95);
-
     } catch (error) {
       console.error("Error loading data:", error);
       document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
@@ -614,7 +604,7 @@
 
   loadFromSheet();
 
-  // Sliders (manual drag still works after auto-set)
+  // Sliders
   document.getElementById('costSlider').addEventListener('input', function() {
     const value = parseFloat(this.value);
     document.getElementById('costPercent').textContent = value.toFixed(1);
@@ -638,7 +628,7 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – OKR 2 auto at 10%, OKR 3 auto at 70%!");
+  console.log("Dashboard loaded – Stock Health KPI now shows % of categories ≥ 1 MOS!");
 </script>
 </body>
 </html>
