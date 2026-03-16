@@ -538,17 +538,40 @@
       kpiGrid.innerHTML = '';
 
       kpiData.forEach(row => {
-        const name = row[0]?.trim();
+        const nameRaw = row[0]?.trim() || '';
         const valueRaw = row[1]?.trim() || '';
 
-        // Extract numeric percentage from value (handles "97.50%", "99%", "90.0 %", etc.)
+        if (!nameRaw || !valueRaw) return;
+
+        // Clean and parse numeric value (handles "97.50%", "99 %", "90.0", etc.)
         const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, ''));
+
+        // Determine color class based on KPI name
+        let colorClass = '';
+        const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
+
+        if (nameLower.includes('all time stock outs') || nameLower.includes('stock outs')) {
+          // Inverted for stock outs
+          if (valueNum <= 3) colorClass = 'high';      // green
+          else if (valueNum < 5) colorClass = 'medium'; // orange
+          else colorClass = 'low';                      // red
+        } else if (nameLower.includes('on time po') || nameLower.includes('on time po %')) {
+          // Custom for On Time PO %
+          if (valueNum >= 90) colorClass = 'high';     // green
+          else if (valueNum >= 80) colorClass = 'medium'; // orange
+          else colorClass = 'low';                      // red
+        } else {
+          // Default for all other KPIs
+          if (valueNum >= 97) colorClass = 'high';     // green
+          else if (valueNum >= 93) colorClass = 'medium'; // orange
+          else colorClass = 'low';                      // red
+        }
 
         const card = document.createElement('div');
         card.className = 'kpi-card';
         card.innerHTML = `
-          <div class="kpi-name">${name}</div>
-          <div class="kpi-value ${getKpiClass(valueNum)}">${valueRaw}</div>
+          <div class="kpi-name">${nameRaw}</div>
+          <div class="kpi-value ${colorClass}">${valueRaw}</div>
         `;
         kpiGrid.appendChild(card);
       });
@@ -560,14 +583,6 @@
       console.error("Error loading data:", error);
       document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
     }
-  }
-
-  // Color class function for KPI values
-  function getKpiClass(percent) {
-    if (isNaN(percent)) return '';
-    if (percent >= 97) return 'high';
-    if (percent >= 93) return 'medium';
-    return 'low';
   }
 
   loadFromSheet();
@@ -596,7 +611,9 @@
     document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
   });
 
-  console.log("Dashboard loaded – KPI cards color-coded (≥97% green, 93-97% orange, <93% red)!");
+  console.log("Dashboard loaded – KPI cards with updated color thresholds!");
 </script>
+</body>
+</html>
 </body>
 </html>
