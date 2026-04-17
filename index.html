@@ -266,6 +266,42 @@
     .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
     .badge { padding: 6px 12px; font-size: 0.95rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 14px; transition: all 0.4s; }
     .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 12px #ffd700aa; transform: scale(1.05); font-weight: bold; }
+
+    /* Sparkline + trend arrow */
+    .sparkline {
+      display: block;
+      width: 100%;
+      height: 26px;
+      margin-top: 6px;
+      overflow: visible;
+    }
+    .trend-arrow {
+      display: inline-block;
+      font-size: 0.95rem;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .trend-arrow.good { color: #00ff9d; text-shadow: 0 0 6px #00ff9d; }
+    .trend-arrow.bad  { color: #ff0044; text-shadow: 0 0 6px #ff0044; }
+    .trend-arrow.flat { color: #888; }
+    .kpi-card, .stock-item { transition: box-shadow 0.3s; }
+
+    /* Weekly change ticker */
+    .wk-change {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      margin-top: 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.3px;
+      line-height: 1.2;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .wk-change.good { color: #00ff9d; border: 1px solid rgba(0, 255, 157, 0.45); text-shadow: 0 0 5px #00ff9d; }
+    .wk-change.bad  { color: #ff0044; border: 1px solid rgba(255, 0, 68, 0.45);  text-shadow: 0 0 5px #ff0044; }
+    .wk-change.flat { color: #888;    border: 1px solid rgba(136, 136, 136, 0.45); }
   </style>
 </head>
 <body>
@@ -386,44 +422,96 @@
           <span class="badge" id="bAll">All Safe! ★</span>
         </div>
       </div>
-      <div class="okr-section">
-        <div class="okr-title">Reduce Cost >20%</div>
-        <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
-          Reduction Achieved: <span id="costPercent">0</span>%
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="prog2"></div>
-          <input type="range" id="costSlider" min="0" max="30" value="0" step="0.1">
-        </div>
-        <div class="badge-container">
-          <span class="badge" id="b2">2%</span>
-          <span class="badge" id="b5">5%</span>
-          <span class="badge" id="b10">10%</span>
-          <span class="badge" id="b15">15%</span>
-          <span class="badge" id="b20">20%+ ★</span>
-        </div>
-      </div>
-      <div class="okr-section">
-        <div class="okr-title">Throttle Cash Flow</div>
-        <div style="text-align: center; font-size: 1.3rem; margin: 10px 0; color: #ffd700;">
-          Cash Flow Control Level: <span id="cashPercent">30</span>%
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="prog3"></div>
-          <input type="range" id="cashSlider" min="0" max="100" value="30">
-        </div>
-        <div class="badge-container">
-          <span class="badge" id="b60c">60%+</span>
-          <span class="badge" id="b85c">85%+</span>
-          <span class="badge" id="b95c">95%+</span>
-        </div>
-      </div>
     </div>
   </div>
 
 <script>
   const HARDWARE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=0&single=true&output=csv";
   const KPI_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1952869269&single=true&output=csv";
+  const HISTORY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1174990261&single=true&output=csv";
+
+  // ---------- History / sparkline helpers ----------
+  async function loadHistory() {
+    try {
+      const res = await fetch(HISTORY_CSV_URL);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const headers = rows[0].map(h => h.trim());
+      const data = rows.slice(1);
+      const history = {};
+      headers.slice(1).forEach((name, i) => {
+        history[name] = data
+          .map(row => ({
+            week: row[0]?.trim(),
+            value: parseFloat((row[i + 1] || '').replace(/[^0-9.-]/g, ''))
+          }))
+          .filter(p => !isNaN(p.value));
+      });
+      return history;
+    } catch (e) {
+      console.error('History load failed', e);
+      return {};
+    }
+  }
+
+  function isLowerBetter(name) {
+    // Metrics where a smaller number is better.
+    // NOTE: Shrink is stored as a negative number (-4.4 = 4.4% loss),
+    // so higher is actually better — it's NOT in this list.
+    const n = (name || '').toLowerCase();
+    return n.includes('stock out');
+  }
+
+  function sparkline(points) {
+    if (!points || points.length < 2) return '';
+    const values = points.map(p => p.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const width = 100, height = 26, pad = 3;
+    const step = width / (points.length - 1);
+    const coords = points.map((p, i) => {
+      const x = i * step;
+      const y = height - pad - ((p.value - min) / range) * (height - 2 * pad);
+      return [x.toFixed(1), y.toFixed(1)];
+    });
+    const polyPts = coords.map(c => c.join(',')).join(' ');
+    const [lx, ly] = coords[coords.length - 1];
+    return `
+      <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="${polyPts}" fill="none" stroke="#00ffea" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#ff00aa"/>
+      </svg>
+    `;
+  }
+
+  function trendArrow(points, lowerBetter = false) {
+    if (!points || points.length < 2) return '<span class="trend-arrow flat">—</span>';
+    const last = points[points.length - 1].value;
+    const prev = points[points.length - 2].value;
+    if (last === prev) return '<span class="trend-arrow flat">▬</span>';
+    const goingUp = last > prev;
+    const isGood = lowerBetter ? !goingUp : goingUp;
+    const arrow = goingUp ? '▲' : '▼';
+    return `<span class="trend-arrow ${isGood ? 'good' : 'bad'}">${arrow}</span>`;
+  }
+
+  function weekOverWeekChange(points, lowerBetter = false) {
+    if (!points || points.length < 2) return '';
+    const last = points[points.length - 1].value;
+    const prev = points[points.length - 2].value;
+    if (prev === 0) {
+      if (last === 0) return '<span class="wk-change flat">▬ 0% vs last week</span>';
+      return '<span class="wk-change flat">▲ new vs last week</span>';
+    }
+    const pct = ((last - prev) / Math.abs(prev)) * 100;
+    if (pct === 0) return '<span class="wk-change flat">▬ 0% vs last week</span>';
+    const goingUp = pct > 0;
+    const isGood = lowerBetter ? !goingUp : goingUp;
+    const arrow = goingUp ? '▲' : '▼';
+    const sign = goingUp ? '+' : '';
+    return `<span class="wk-change ${isGood ? 'good' : 'bad'}">${arrow} ${sign}${pct.toFixed(1)}% vs last week</span>`;
+  }
 
   const mosElements = {
     primaryMOS: document.getElementById('primaryMOS'),
@@ -482,9 +570,11 @@
 
   async function loadFromSheet() {
     try {
-      // Hardware from main sheet
-      const hwResponse = await fetch(HARDWARE_CSV_URL);
-      const hwText = await hwResponse.text();
+      // Fetch hardware + history in parallel
+      const [hwText, history] = await Promise.all([
+        fetch(HARDWARE_CSV_URL).then(r => r.text()),
+        loadHistory()
+      ]);
       const hwRows = hwText.trim().split('\n').map(row => row.split(','));
       const hwData = hwRows.slice(1);
 
@@ -518,6 +608,20 @@
         } else {
           mosEl.classList.add('danger');
         }
+
+        // Attach weekly change ticker + sparkline + trend arrow (higher MOS = better)
+        const stockItem = mosEl.closest('.stock-item');
+        stockItem.querySelectorAll('.sparkline-wrapper').forEach(el => el.remove());
+        const itemHistory = history[item] || [];
+        if (itemHistory.length >= 2) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'sparkline-wrapper';
+          wrapper.style.width = '100%';
+          wrapper.style.textAlign = 'center';
+          wrapper.innerHTML = weekOverWeekChange(itemHistory, false) + sparkline(itemHistory);
+          stockItem.appendChild(wrapper);
+          mosEl.insertAdjacentHTML('beforeend', ' ' + trendArrow(itemHistory, false));
+        }
       });
 
       const okr1Pct = (safeCount / 12) * 100;
@@ -550,17 +654,23 @@
 
         const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
 
+        const kpiHistory = history[nameRaw] || [];
+        const lowerBetter = isLowerBetter(nameRaw);
+        const arrow = trendArrow(kpiHistory, lowerBetter);
+        const spark = sparkline(kpiHistory);
+
         // Special case: Stock Health / MOS % KPI
-        if (nameLower.includes('stock health') || 
-            nameLower.includes('supply chain stock') || 
-            nameLower.includes('mos') || 
+        if (nameLower.includes('stock health') ||
+            nameLower.includes('supply chain stock') ||
+            nameLower.includes('mos') ||
             nameLower.includes('months of supply')) {
           valueRaw = stockHealthPct.toFixed(0) + '%';
           const card = document.createElement('div');
           card.className = 'kpi-card';
           card.innerHTML = `
-            <div class="kpi-name">${nameRaw}</div>
+            <div class="kpi-name">${nameRaw} ${arrow}</div>
             <div class="kpi-value ${stockHealthClass}">${valueRaw}</div>
+            ${spark}
           `;
           kpiGrid.appendChild(card);
           return;
@@ -587,8 +697,9 @@
         const card = document.createElement('div');
         card.className = 'kpi-card';
         card.innerHTML = `
-          <div class="kpi-name">${nameRaw}</div>
+          <div class="kpi-name">${nameRaw} ${arrow}</div>
           <div class="kpi-value ${colorClass}">${valueRaw}</div>
+          ${spark}
         `;
         kpiGrid.appendChild(card);
       });
@@ -604,33 +715,7 @@
 
   loadFromSheet();
 
-  // Sliders
-  document.getElementById('costSlider').addEventListener('input', function() {
-    const value = parseFloat(this.value);
-    document.getElementById('costPercent').textContent = value.toFixed(1);
-    const visualPct = Math.min(100, (value / 30) * 100);
-    document.getElementById('prog2').style.width = visualPct + '%';
-
-    document.getElementById('b2').classList.toggle('unlocked', value >= 2);
-    document.getElementById('b5').classList.toggle('unlocked', value >= 5);
-    document.getElementById('b10').classList.toggle('unlocked', value >= 10);
-    document.getElementById('b15').classList.toggle('unlocked', value >= 15);
-    document.getElementById('b20').classList.toggle('unlocked', value >= 20);
-  });
-
-  document.getElementById('cashSlider').addEventListener('input', function() {
-    const value = parseInt(this.value);
-    document.getElementById('cashPercent').textContent = value;
-    document.getElementById('prog3').style.width = value + '%';
-
-    document.getElementById('b60c').classList.toggle('unlocked', value >= 60);
-    document.getElementById('b85c').classList.toggle('unlocked', value >= 85);
-    document.getElementById('b95c').classList.toggle('unlocked', value >= 95);
-  });
-
   console.log("Dashboard loaded – Stock Health KPI now shows % of categories ≥ 1 MOS!");
 </script>
-</body>
-</html>
 </body>
 </html>
