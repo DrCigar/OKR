@@ -302,6 +302,64 @@
     .wk-change.good { color: #00ff9d; border: 1px solid rgba(0, 255, 157, 0.45); text-shadow: 0 0 5px #00ff9d; }
     .wk-change.bad  { color: #ff0044; border: 1px solid rgba(255, 0, 68, 0.45);  text-shadow: 0 0 5px #ff0044; }
     .wk-change.flat { color: #888;    border: 1px solid rgba(136, 136, 136, 0.45); }
+
+    /* MAX ACHIEVEMENT: 12/12 safe — shiny gold tile */
+    .okr-section.maxed {
+      background:
+        linear-gradient(135deg, rgba(255,215,0,0.28), rgba(255,170,0,0.12) 40%, rgba(255,215,0,0.28));
+      border-color: #ffd700;
+      box-shadow:
+        0 0 28px #ffd700,
+        0 0 60px rgba(255, 0, 170, 0.5),
+        inset 0 0 24px rgba(255, 215, 0, 0.35);
+      animation: goldPulse 2.6s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+    .okr-section.maxed .okr-title {
+      color: #ffd700;
+      text-shadow: 0 0 12px #ffd700, 0 0 24px #ffaa00;
+    }
+    .okr-section.maxed #okr1Status {
+      color: #fff8dc;
+      text-shadow: 0 0 10px #ffd700;
+      font-weight: bold;
+    }
+    .okr-section.maxed .progress-fill {
+      background: linear-gradient(90deg, #ffd700, #fff8dc, #ffd700, #ffaa00);
+      background-size: 200% 100%;
+      animation: goldShimmer 2.4s linear infinite;
+      box-shadow: 0 0 16px #ffd700;
+    }
+    /* Shiny sweep streak across the tile */
+    .okr-section.maxed::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -60%;
+      width: 50%; height: 100%;
+      background: linear-gradient(115deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.28) 48%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(255, 255, 255, 0.28) 52%,
+        transparent 80%);
+      transform: skewX(-18deg);
+      animation: goldSweep 3.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes goldPulse {
+      0%, 100% { box-shadow: 0 0 28px #ffd700, 0 0 60px rgba(255,0,170,0.5), inset 0 0 24px rgba(255,215,0,0.35); }
+      50%      { box-shadow: 0 0 48px #ffd700, 0 0 90px rgba(255,0,170,0.75), inset 0 0 34px rgba(255,215,0,0.55); }
+    }
+    @keyframes goldShimmer {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    @keyframes goldSweep {
+      0%   { left: -60%; }
+      60%  { left: 120%; }
+      100% { left: 120%; }
+    }
   </style>
 </head>
 <body>
@@ -628,9 +686,9 @@
       document.getElementById('prog1').style.width = okr1Pct + '%';
       document.getElementById('okr1Count').textContent = safeCount;
 
-      if (safeCount === 12) {
-        document.getElementById('bAll').classList.add('unlocked');
-      }
+      const maxed = safeCount === 12;
+      document.getElementById('bAll').classList.toggle('unlocked', maxed);
+      document.querySelector('.okr-section').classList.toggle('maxed', maxed);
 
       // KPI cards from Sheet 2
       const kpiResponse = await fetch(KPI_CSV_URL);
