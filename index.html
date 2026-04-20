@@ -289,22 +289,25 @@
     /* Weekly change ticker */
     .wk-change {
       display: inline-block;
-      font-size: 0.72rem;
-      padding: 2px 7px;
+      font-size: 0.95rem;
+      padding: 3px 10px;
       margin-top: 6px;
-      border-radius: 10px;
+      border-radius: 12px;
       background: rgba(0, 0, 0, 0.4);
-      letter-spacing: 0.3px;
+      letter-spacing: 0.4px;
       line-height: 1.2;
       font-weight: bold;
       white-space: nowrap;
+      color: #a78bfa;
+      border: 1px solid rgba(167, 139, 250, 0.45);
     }
-    .wk-change.good { color: #00ff9d; border: 1px solid rgba(0, 255, 157, 0.45); text-shadow: 0 0 5px #00ff9d; }
-    .wk-change.bad  { color: #ff0044; border: 1px solid rgba(255, 0, 68, 0.45);  text-shadow: 0 0 5px #ff0044; }
-    .wk-change.flat { color: #888;    border: 1px solid rgba(136, 136, 136, 0.45); }
+    .wk-change.good { color: #00ff9d; border-color: rgba(0, 255, 157, 0.45); text-shadow: 0 0 5px #00ff9d; }
+    .wk-change.bad,
+    .wk-change.flat { color: #a78bfa; border-color: rgba(167, 139, 250, 0.45); text-shadow: none; }
 
-    /* MAX ACHIEVEMENT: 12/12 safe — gold shining border only */
-    .okr-section.maxed {
+    /* MAX ACHIEVEMENT: shiny gold border for max-state KPIs and OKR tile */
+    .okr-section.maxed,
+    .kpi-card.maxed {
       border-color: #ffd700;
       box-shadow:
         0 0 24px #ffd700,
@@ -482,6 +485,17 @@
     return n.includes('stock out');
   }
 
+  // Returns true when a KPI is in its "max achievement" band.
+  function isKpiMaxed(name, value) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('supply order success')) return value > 98.5;
+    if (n.includes('on time fulfillment')) return value > 99.5;
+    if (n.includes('shrink')) return value >= -1 && value <= 0;
+    if (n.includes('supply chain stock health') || n.includes('stock health')) return value === 100;
+    if (n.includes('stock out')) return value >= 0 && value <= 2;
+    return false;
+  }
+
   function sparkline(points) {
     if (!points || points.length < 2) return '';
     const values = points.map(p => p.value);
@@ -521,16 +535,16 @@
     const last = points[points.length - 1].value;
     const prev = points[points.length - 2].value;
     if (prev === 0) {
-      if (last === 0) return '<span class="wk-change flat">▬ 0% vs last week</span>';
-      return '<span class="wk-change flat">▲ new vs last week</span>';
+      if (last === 0) return '<span class="wk-change flat">▬ 0% Vs. LW</span>';
+      return '<span class="wk-change flat">▲ new Vs. LW</span>';
     }
     const pct = ((last - prev) / Math.abs(prev)) * 100;
-    if (pct === 0) return '<span class="wk-change flat">▬ 0% vs last week</span>';
+    if (pct === 0) return '<span class="wk-change flat">▬ 0% Vs. LW</span>';
     const goingUp = pct > 0;
     const isGood = lowerBetter ? !goingUp : goingUp;
     const arrow = goingUp ? '▲' : '▼';
     const sign = goingUp ? '+' : '';
-    return `<span class="wk-change ${isGood ? 'good' : 'bad'}">${arrow} ${sign}${pct.toFixed(1)}% vs last week</span>`;
+    return `<span class="wk-change ${isGood ? 'good' : 'bad'}">${arrow} ${sign}${pct.toFixed(1)}% Vs. LW</span>`;
   }
 
   const mosElements = {
@@ -687,6 +701,7 @@
           valueRaw = stockHealthPct.toFixed(0) + '%';
           const card = document.createElement('div');
           card.className = 'kpi-card';
+          if (isKpiMaxed(nameRaw, stockHealthPct)) card.classList.add('maxed');
           card.innerHTML = `
             <div class="kpi-name">${nameRaw} ${arrow}</div>
             <div class="kpi-value ${stockHealthClass}">${valueRaw}</div>
@@ -696,11 +711,16 @@
           return;
         }
 
-        // Normal KPI logic (with value from sheet)
-        const valueNum = parseFloat(valueRaw.replace(/[^0-9.]/g, '')) || 0;
+        // Normal KPI logic (with value from sheet) — preserve minus signs for negatives
+        const valueNum = parseFloat(valueRaw.replace(/[^0-9.-]/g, '')) || 0;
 
         let colorClass = '';
-        if (nameLower.includes('stock out frequency') || nameLower.includes('stock outs') || nameLower.includes('all time stock outs')) {
+        if (nameLower.includes('shrink')) {
+          // Shrink stored as negative. Green: -2 to 0, Orange: -3 to -2, Red: below -3 or positive
+          if (valueNum > 0 || valueNum <= -3) colorClass = 'low';
+          else if (valueNum <= -2) colorClass = 'medium';
+          else colorClass = 'high';
+        } else if (nameLower.includes('stock out frequency') || nameLower.includes('stock outs') || nameLower.includes('all time stock outs')) {
           if (valueNum <= 2) colorClass = 'high';
           else if (valueNum <= 4) colorClass = 'medium';
           else colorClass = 'low';
@@ -716,6 +736,7 @@
 
         const card = document.createElement('div');
         card.className = 'kpi-card';
+        if (isKpiMaxed(nameRaw, valueNum)) card.classList.add('maxed');
         card.innerHTML = `
           <div class="kpi-name">${nameRaw} ${arrow}</div>
           <div class="kpi-value ${colorClass}">${valueRaw}</div>
