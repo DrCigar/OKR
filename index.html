@@ -5,17 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Supply Chain Mainframe</title>
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --border-hi: #3a3a3a;
+      --orange: #f97316;
+      --orange-soft: rgba(249, 115, 22, 0.5);
+      --text: #f5f5f5;
+      --muted: #8a8a8a;
+      --good: #22c55e;
+      --warn: #f97316;
+      --bad: #ef4444;
+    }
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Courier New', Courier, monospace;
-      background: #0d001a;
-      color: #e0f7ff;
-      image-rendering: pixelated;
-      background-image:
-        linear-gradient(rgba(20,0,40,0.85), rgba(20,0,40,0.85)),
-        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23110022"/><path d="M0 0h2v2H0zM62 62h2v2h-2z" fill="%23330066"/></svg>');
-      background-size: 64px 64px;
+      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       overflow-y: auto;
       position: relative;
@@ -27,8 +35,8 @@
       z-index: -2;
       pointer-events: none;
       background: url('https://pos360.com/wp-content/uploads/2024/05/POS360-sphere.png') center center / contain no-repeat;
-      opacity: 0.45;
-      filter: brightness(1.1) contrast(1.15);
+      opacity: 0.06;
+      filter: grayscale(1) brightness(1.4);
     }
 
     .bg-glow {
@@ -37,55 +45,53 @@
       z-index: -1;
       pointer-events: none;
       background: radial-gradient(
-        circle at 50% 50%,
-        rgba(0, 255, 234, 0.35) 0%,
-        rgba(255, 0, 170, 0.28) 40%,
-        transparent 75%
+        circle at 50% 0%,
+        rgba(249, 115, 22, 0.10) 0%,
+        transparent 55%
       );
-      animation: glowPulseStrong 8s infinite alternate ease-in-out;
-    }
-
-    @keyframes glowPulseStrong {
-      0%   { opacity: 0.6; transform: scale(1); }
-      100% { opacity: 1.0; transform: scale(1.08); }
     }
 
     .container {
       max-width: 100%;
-      padding: 20px;
-      background: rgba(10, 5, 30, 0.75);
-      border: 4px solid #00ffea;
-      border-image: linear-gradient(to right, #00ffea, #ff00aa) 1;
-      box-shadow: 0 0 30px rgba(0,255,234,0.3);
+      padding: 20px 28px 28px;
+      background: transparent;
       position: relative;
       z-index: 1;
       min-height: 100vh;
     }
 
-    .header-section { text-align: center; margin-bottom: 15px; }
+    .header-section { text-align: center; margin: 6px 0 18px; }
     .dashboard-title {
-      color: #00ffea;
-      text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa;
-      font-size: 3.2rem;
+      color: var(--text);
+      font-size: 3rem;
+      font-weight: 800;
       margin: 0;
-      letter-spacing: 6px;
-      animation: pulseGlow 3.5s infinite;
+      letter-spacing: 10px;
+      text-transform: uppercase;
     }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 1; text-shadow: 0 0 25px #00ffea, 0 0 50px #ff00aa; }
-      50% { opacity: 0.85; text-shadow: 0 0 15px #00ffea, 0 0 30px #ff00aa; }
+    .dashboard-title::after {
+      content: '';
+      display: block;
+      width: 90px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--orange);
+      margin: 12px auto 0;
     }
     .safety-bar {
-      background: #1a0033;
-      color: #00ff9d;
-      font-size: 1.2rem;
-      padding: 8px 0;
+      background: var(--card);
+      color: var(--orange);
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 9px 0;
       overflow: hidden;
       white-space: nowrap;
       text-align: center;
-      text-shadow: 0 0 8px #00ff9d;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       margin-bottom: 6px;
-      border-bottom: 2px solid #00ff9d;
+      border: 1px solid var(--border);
+      border-radius: 12px;
     }
     .safety-text {
       display: inline-block;
@@ -100,71 +106,75 @@
       text-align: center;
     }
     .kpi-title {
-      color: #ffd700;
-      text-shadow: 0 0 18px #ffd700;
-      font-size: 1.8rem;
-      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin: 0 0 14px;
       position: relative;
       display: inline-block;
     }
     .kpi-title::after {
       content: '';
       display: block;
-      width: 70%;
-      height: 2px;
-      background: linear-gradient(to right, transparent, #ffd700, #ff00aa, transparent);
-      margin: 6px auto 0;
-      box-shadow: 0 0 15px #ffd700;
+      width: 48px;
+      height: 3px;
+      border-radius: 3px;
+      background: var(--orange);
+      margin: 8px auto 0;
     }
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 12px;
+      gap: 14px;
     }
     .kpi-card {
-      background: rgba(40,30,70,0.7);
-      border: 2px solid #a78bfa;
-      border-radius: 8px;
-      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 12px;
       text-align: center;
       min-height: 90px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
     }
     .kpi-name {
-      font-size: 1.0rem;
-      color: #a78bfa;
-      margin-bottom: 4px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .kpi-value {
       font-size: 1.8rem;
-      font-weight: bold;
-      text-shadow: 0 0 10px currentColor;
+      font-weight: 800;
     }
-    .kpi-value.high { color: #00ff9d; }
-    .kpi-value.medium { color: #ffaa00; }
-    .kpi-value.low { color: #ff0044; }
+    .kpi-value.high { color: var(--good); }
+    .kpi-value.medium { color: var(--warn); }
+    .kpi-value.low { color: var(--bad); }
     .arsenal-header {
       text-align: center;
       margin: 25px 0 12px;
     }
     .arsenal-title {
-      color: #ffd700;
-      font-size: 2.8rem;
-      text-shadow: 0 0 18px #ffd700;
-      letter-spacing: 3px;
-      animation: glowPulse 3s infinite;
+      color: var(--text);
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 6px;
+      text-transform: uppercase;
     }
     .arsenal-title::after {
       content: '';
       display: block;
-      width: 40%;
-      height: 3px;
-      background: linear-gradient(to right, transparent, #ffd700, #ff00aa, transparent);
-      margin: 8px auto;
-      box-shadow: 0 0 18px #ffd700;
+      width: 64px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--orange);
+      margin: 10px auto 0;
     }
     .stock-grid {
       display: grid;
@@ -174,10 +184,10 @@
       margin-bottom: 20px;
     }
     .stock-item {
-      background: rgba(30,20,60,0.7);
-      border: 3px solid #00ffea;
-      border-radius: 10px;
-      padding: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 12px;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -185,32 +195,31 @@
       text-align: center;
       min-height: 150px;
       position: relative;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
     }
-    .stock-icon { font-size: 4rem; margin-bottom: 6px; z-index: 1; }
-    .stock-label { font-size: 1.1rem; color: #a78bfa; margin-bottom: 6px; z-index: 1; }
+    .stock-icon { font-size: 3.4rem; margin-bottom: 6px; z-index: 1; }
+    .stock-label { font-size: 1.05rem; color: var(--muted); margin-bottom: 6px; z-index: 1; text-transform: uppercase; letter-spacing: 0.5px; }
     .mos-display {
       font-size: 1.8rem;
-      font-weight: bold;
+      font-weight: 800;
       animation-duration: 2s;
       animation-iteration-count: infinite;
       z-index: 1;
     }
-    .mos-display.win { color: #00ff9d; animation-name: pulseGreen; }
-    .mos-display.danger { color: #ff0044; animation-name: pulseRed; }
+    .mos-display.win { color: var(--good); animation-name: pulseGreen; }
+    .mos-display.danger { color: var(--bad); animation-name: pulseRed; }
     .quantity-small {
-      font-size: 0.9rem;
-      color: #ffd700;
-      font-weight: bold;
+      font-size: 0.85rem;
+      color: var(--orange);
+      font-weight: 700;
       position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0.8;
+      top: 10px;
+      left: 12px;
+      opacity: 0.9;
       z-index: 1;
     }
     @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    @keyframes glowPulse { 0%,100% { text-shadow: 0 0 18px #ffd700; } 50% { text-shadow: 0 0 30px #ffd700; } }
     .okr-row {
       display: flex;
       justify-content: space-between;
@@ -219,17 +228,18 @@
     }
     .okr-section {
       flex: 1;
-      padding: 18px;
-      background: rgba(30,20,60,0.6);
-      border: 4px solid #a78bfa;
-      border-radius: 10px;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
     }
-    .okr-title { color: #ff00aa; font-size: 1.8rem; margin: 0 0 10px; text-shadow: 0 0 8px #ff00aa; }
+    .okr-title { color: var(--text); font-size: 1.5rem; font-weight: 700; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 2px; }
     .progress-bar {
       height: 28px;
-      background: #111133;
-      border: 2px solid #ffd700;
-      border-radius: 8px;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
       overflow: hidden;
       margin: 8px 0;
       position: relative;
@@ -237,7 +247,7 @@
     }
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ff6b6b, #00ff9d);
+      background: linear-gradient(90deg, #c2410c, var(--orange));
       transition: width 0.6s ease;
       width: 0%;
     }
@@ -264,8 +274,8 @@
       background: transparent;
     }
     .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
-    .badge { padding: 6px 12px; font-size: 0.95rem; background: #222244; color: #8888aa; border: 2px solid #444466; border-radius: 14px; transition: all 0.4s; }
-    .badge.unlocked { background: #ffd700; color: #1a0033; border-color: #ff00aa; box-shadow: 0 0 12px #ffd700aa; transform: scale(1.05); font-weight: bold; }
+    .badge { padding: 6px 12px; font-size: 0.95rem; background: #0a0a0a; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; transition: all 0.4s; }
+    .badge.unlocked { background: var(--orange); color: #0a0a0a; border-color: var(--orange); transform: scale(1.05); font-weight: 700; }
 
     /* Sparkline + trend arrow */
     .sparkline {
@@ -281,9 +291,9 @@
       margin-left: 6px;
       vertical-align: middle;
     }
-    .trend-arrow.good { color: #00ff9d; text-shadow: 0 0 6px #00ff9d; }
-    .trend-arrow.bad  { color: #ff0044; text-shadow: 0 0 6px #ff0044; }
-    .trend-arrow.flat { color: #888; }
+    .trend-arrow.good { color: var(--good); }
+    .trend-arrow.bad  { color: var(--bad); }
+    .trend-arrow.flat { color: var(--muted); }
     .kpi-card, .stock-item { transition: box-shadow 0.3s; }
 
     /* Weekly change ticker */
@@ -296,14 +306,14 @@
       background: rgba(0, 0, 0, 0.4);
       letter-spacing: 0.4px;
       line-height: 1.2;
-      font-weight: bold;
+      font-weight: 700;
       white-space: nowrap;
-      color: #a78bfa;
-      border: 1px solid rgba(167, 139, 250, 0.45);
+      color: var(--muted);
+      border: 1px solid var(--border);
     }
-    .wk-change.good { color: #00ff9d; border-color: rgba(0, 255, 157, 0.45); text-shadow: 0 0 5px #00ff9d; }
+    .wk-change.good { color: var(--good); border-color: rgba(34, 197, 94, 0.4); }
     .wk-change.bad,
-    .wk-change.flat { color: #a78bfa; border-color: rgba(167, 139, 250, 0.45); text-shadow: none; }
+    .wk-change.flat { color: var(--muted); border-color: var(--border); }
 
     /* MAX ACHIEVEMENT: shiny gold border for max-state KPIs and OKR tile */
     .okr-section.maxed,
@@ -460,12 +470,15 @@
       const text = await res.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
       const headers = rows[0].map(h => h.trim());
-      const data = rows.slice(1);
+      // Only keep rows that have a real Week Ending date in column A.
+      // History tab is columns A–S (Week Ending + 6 KPIs + 12 hardware).
+      // Anything outside that shape (orphan values, blank rows) is ignored.
+      const data = rows.slice(1).filter(row => row[0] && row[0].trim());
       const history = {};
       headers.slice(1).forEach((name, i) => {
         history[name] = data
           .map(row => ({
-            week: row[0]?.trim(),
+            week: row[0].trim(),
             value: parseFloat((row[i + 1] || '').replace(/[^0-9.-]/g, ''))
           }))
           .filter(p => !isNaN(p.value));
@@ -513,8 +526,8 @@
     const [lx, ly] = coords[coords.length - 1];
     return `
       <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${polyPts}" fill="none" stroke="#00ffea" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>
-        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#ff00aa"/>
+        <polyline points="${polyPts}" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#f97316"/>
       </svg>
     `;
   }
@@ -534,17 +547,13 @@
     if (!points || points.length < 2) return '';
     const last = points[points.length - 1].value;
     const prev = points[points.length - 2].value;
-    if (prev === 0) {
-      if (last === 0) return '<span class="wk-change flat">▬ 0% Vs. LW</span>';
-      return '<span class="wk-change flat">▲ new Vs. LW</span>';
-    }
-    const pct = ((last - prev) / Math.abs(prev)) * 100;
-    if (pct === 0) return '<span class="wk-change flat">▬ 0% Vs. LW</span>';
-    const goingUp = pct > 0;
+    const delta = last - prev;
+    if (delta === 0) return '<span class="wk-change flat">▬ 0.0 MOS Vs. LW</span>';
+    const goingUp = delta > 0;
     const isGood = lowerBetter ? !goingUp : goingUp;
     const arrow = goingUp ? '▲' : '▼';
     const sign = goingUp ? '+' : '';
-    return `<span class="wk-change ${isGood ? 'good' : 'bad'}">${arrow} ${sign}${pct.toFixed(1)}% Vs. LW</span>`;
+    return `<span class="wk-change ${isGood ? 'good' : 'bad'}">${arrow} ${sign}${delta.toFixed(1)} MOS Vs. LW</span>`;
   }
 
   const mosElements = {
