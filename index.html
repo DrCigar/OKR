@@ -4,24 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Supply Chain Mainframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --card: #1a1a1a;
-      --border: #2a2a2a;
+      --bg: #000000;
+      --card: #0d0d0d;
+      --border: #242424;
       --border-hi: #3a3a3a;
       --orange: #f97316;
       --orange-soft: rgba(249, 115, 22, 0.5);
       --text: #f5f5f5;
-      --muted: #8a8a8a;
+      --muted: #707070;
       --good: #22c55e;
+      --good-glow: rgba(34, 197, 94, 0.55);
       --warn: #f97316;
-      --bad: #ef4444;
+      --bad: #ff4444;
+      --bad-glow: rgba(255, 68, 68, 0.5);
+      --mono: "Share Tech Mono", "Courier New", monospace;
+      --display: "Orbitron", "Share Tech Mono", monospace;
     }
     body {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--mono);
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -62,11 +69,12 @@
 
     .header-section { text-align: center; margin: 6px 0 18px; }
     .dashboard-title {
+      font-family: var(--display);
       color: var(--text);
-      font-size: 3rem;
+      font-size: 2.7rem;
       font-weight: 800;
       margin: 0;
-      letter-spacing: 10px;
+      letter-spacing: 8px;
       text-transform: uppercase;
     }
     .dashboard-title::after {
@@ -150,7 +158,8 @@
       letter-spacing: 0.5px;
     }
     .kpi-value {
-      font-size: 1.8rem;
+      font-family: var(--display);
+      font-size: 1.7rem;
       font-weight: 800;
     }
     .kpi-value.high { color: var(--good); }
@@ -161,8 +170,9 @@
       margin: 25px 0 12px;
     }
     .arsenal-title {
+      font-family: var(--display);
       color: var(--text);
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 800;
       letter-spacing: 6px;
       text-transform: uppercase;
@@ -200,14 +210,15 @@
     .stock-icon { font-size: 3.4rem; margin-bottom: 6px; z-index: 1; }
     .stock-label { font-size: 1.05rem; color: var(--muted); margin-bottom: 6px; z-index: 1; text-transform: uppercase; letter-spacing: 0.5px; }
     .mos-display {
-      font-size: 1.8rem;
+      font-family: var(--display);
+      font-size: 1.7rem;
       font-weight: 800;
       animation-duration: 2s;
       animation-iteration-count: infinite;
       z-index: 1;
     }
-    .mos-display.win { color: var(--good); animation-name: pulseGreen; }
-    .mos-display.danger { color: var(--bad); animation-name: pulseRed; }
+    .mos-display.win { color: var(--good); text-shadow: 0 0 12px var(--good-glow); animation-name: pulseGreen; }
+    .mos-display.danger { color: var(--bad); text-shadow: 0 0 12px var(--bad-glow); animation-name: pulseRed; }
     .quantity-small {
       font-size: 0.85rem;
       color: var(--orange);
@@ -276,6 +287,18 @@
     .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
     .badge { padding: 6px 12px; font-size: 0.95rem; background: #0a0a0a; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; transition: all 0.4s; }
     .badge.unlocked { background: var(--orange); color: #0a0a0a; border-color: var(--orange); transform: scale(1.05); font-weight: 700; }
+
+    /* State-driven glowing card borders (command-center style) */
+    .stock-item:not(.maxed):has(.mos-display.win),
+    .kpi-card:not(.maxed):has(.kpi-value.high) {
+      border-color: rgba(34, 197, 94, 0.55);
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.18), inset 0 0 22px rgba(34, 197, 94, 0.06);
+    }
+    .stock-item:not(.maxed):has(.mos-display.danger),
+    .kpi-card:not(.maxed):has(.kpi-value.low) {
+      border-color: rgba(255, 68, 68, 0.55);
+      box-shadow: 0 0 18px rgba(255, 68, 68, 0.18), inset 0 0 22px rgba(255, 68, 68, 0.06);
+    }
 
     /* Sparkline + trend arrow */
     .sparkline {
