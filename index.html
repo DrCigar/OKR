@@ -13,15 +13,20 @@
       --card: #0d0d0d;
       --border: #242424;
       --border-hi: #3a3a3a;
-      --orange: #ef4023;
-      --orange-soft: rgba(239, 64, 35, 0.5);
       --text: #f5f5f5;
       --muted: #707070;
+      --chrome: #9a9a9a;       /* neutral grey for chrome accents */
+      /* status colors only: green = up/good, orange = down/at-risk */
       --good: #22c55e;
       --good-glow: rgba(34, 197, 94, 0.55);
-      --warn: #ef4023;
-      --bad: #ff4444;
-      --bad-glow: rgba(255, 68, 68, 0.5);
+      --down: #ef4023;
+      --down-glow: rgba(239, 64, 35, 0.5);
+      /* legacy aliases kept so existing rules resolve to the new system */
+      --orange: var(--chrome);
+      --orange-soft: rgba(154, 154, 154, 0.4);
+      --warn: var(--down);
+      --bad: var(--down);
+      --bad-glow: var(--down-glow);
       --mono: "Share Tech Mono", "Courier New", monospace;
       --display: "Orbitron", "Share Tech Mono", monospace;
     }
@@ -29,11 +34,30 @@
       margin: 0;
       padding: 0;
       font-family: var(--mono);
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 42px 42px;
       color: var(--text);
       min-height: 100vh;
       overflow-y: auto;
       position: relative;
+    }
+    /* CRT scanline overlay */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.10) 0,
+        rgba(0,0,0,0.10) 1px,
+        transparent 1px,
+        transparent 3px
+      );
     }
 
     .bg-sphere {
@@ -53,7 +77,7 @@
       pointer-events: none;
       background: radial-gradient(
         circle at 50% 0%,
-        rgba(239, 64, 35, 0.10) 0%,
+        rgba(255, 255, 255, 0.04) 0%,
         transparent 55%
       );
     }
@@ -80,15 +104,24 @@
     .dashboard-title::after {
       content: '';
       display: block;
-      width: 90px;
-      height: 4px;
-      border-radius: 4px;
-      background: var(--orange);
-      margin: 12px auto 0;
+      width: 200px;
+      height: 3px;
+      border-radius: 3px;
+      margin: 13px auto 0;
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.75),
+        rgba(255,255,255,0.06));
+      background-size: 220% 100%;
+      animation: titleSweep 3.4s linear infinite;
+    }
+    @keyframes titleSweep {
+      0%   { background-position: 220% 0; }
+      100% { background-position: -220% 0; }
     }
     .safety-bar {
       background: var(--card);
-      color: var(--orange);
+      color: #d0d0d0;
       font-size: 1.15rem;
       font-weight: 600;
       padding: 9px 0;
@@ -231,6 +264,34 @@
     .stock-item:has(.mos-display.danger)::before,
     .stock-item:has(.mos-display.danger)::after { border-color: var(--bad); }
 
+    /* Per-tile status LED */
+    .status-led {
+      position: absolute;
+      top: 11px;
+      right: 11px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--muted);
+      z-index: 2;
+    }
+    .stock-item:has(.mos-display.win) .status-led {
+      background: var(--good);
+      animation: ledGood 2.2s ease-in-out infinite;
+    }
+    .stock-item:has(.mos-display.danger) .status-led {
+      background: var(--down);
+      animation: ledBad 2.2s ease-in-out infinite;
+    }
+    @keyframes ledGood {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+      50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+    @keyframes ledBad {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,64,35,0.55); }
+      50%      { box-shadow: 0 0 0 6px rgba(239,64,35,0); }
+    }
+
     .stock-icon { width: 46px; height: 46px; margin-bottom: 8px; z-index: 1; color: var(--muted); transition: color 0.3s, filter 0.3s; }
     .stock-item:has(.mos-display.win) .stock-icon { color: var(--good); filter: drop-shadow(0 0 6px var(--good-glow)); }
     .stock-item:has(.mos-display.danger) .stock-icon { color: var(--bad); filter: drop-shadow(0 0 6px var(--bad-glow)); }
@@ -318,7 +379,7 @@
     }
     .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
     .badge { padding: 6px 12px; font-size: 0.95rem; background: #0a0a0a; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; transition: all 0.4s; }
-    .badge.unlocked { background: var(--orange); color: #0a0a0a; border-color: var(--orange); transform: scale(1.05); font-weight: 700; }
+    .badge.unlocked { background: var(--good); color: #0a0a0a; border-color: var(--good); transform: scale(1.05); font-weight: 700; }
 
     /* State-driven glowing card borders (command-center style) */
     .stock-item:not(.maxed):has(.mos-display.win),
@@ -367,7 +428,7 @@
       border: 1px solid var(--border);
     }
     .wk-change.good { color: var(--good); border-color: rgba(34, 197, 94, 0.4); }
-    .wk-change.bad,
+    .wk-change.bad { color: var(--down); border-color: rgba(239, 64, 35, 0.4); }
     .wk-change.flat { color: var(--muted); border-color: var(--border); }
 
     /* MAX ACHIEVEMENT: shiny gold border for max-state KPIs and OKR tile */
@@ -631,8 +692,8 @@
     const [lx, ly] = coords[coords.length - 1];
     return `
       <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${polyPts}" fill="none" stroke="#ef4023" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
-        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#ef4023"/>
+        <polyline points="${polyPts}" fill="none" stroke="#8a8a8a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#cfcfcf"/>
       </svg>
     `;
   }
@@ -715,6 +776,13 @@
     document.getElementById('safetyText').innerHTML = `<svg class="ticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.2 12l2 2 3.6-4"/></svg> DAYS SINCE LAST INCIDENT: ${diffDays} &nbsp;|&nbsp; SAFETY FIRST`;
   }
   updateSafetyDays();
+
+  // Inject a status LED into each hardware tile
+  document.querySelectorAll('.stock-item').forEach(item => {
+    const led = document.createElement('span');
+    led.className = 'status-led';
+    item.appendChild(led);
+  });
 
   async function loadFromSheet() {
     try {
