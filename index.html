@@ -105,6 +105,12 @@
       display: inline-block;
       animation: scrollLeft 25s linear infinite;
     }
+    .ticker-icon {
+      width: 18px;
+      height: 18px;
+      vertical-align: -3px;
+      margin-right: 4px;
+    }
     @keyframes scrollLeft {
       0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
@@ -207,7 +213,27 @@
       position: relative;
       box-shadow: 0 2px 10px rgba(0,0,0,0.4);
     }
-    .stock-icon { font-size: 3.4rem; margin-bottom: 6px; z-index: 1; }
+    /* HUD targeting-reticle corner brackets */
+    .stock-item::before, .stock-item::after {
+      content: "";
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border-color: var(--border-hi);
+      border-style: solid;
+      pointer-events: none;
+      transition: border-color 0.3s;
+    }
+    .stock-item::before { top: 7px; left: 7px; border-width: 2px 0 0 2px; border-top-left-radius: 3px; }
+    .stock-item::after  { bottom: 7px; right: 7px; border-width: 0 2px 2px 0; border-bottom-right-radius: 3px; }
+    .stock-item:has(.mos-display.win)::before,
+    .stock-item:has(.mos-display.win)::after { border-color: var(--good); }
+    .stock-item:has(.mos-display.danger)::before,
+    .stock-item:has(.mos-display.danger)::after { border-color: var(--bad); }
+
+    .stock-icon { width: 46px; height: 46px; margin-bottom: 8px; z-index: 1; color: var(--muted); transition: color 0.3s, filter 0.3s; }
+    .stock-item:has(.mos-display.win) .stock-icon { color: var(--good); filter: drop-shadow(0 0 6px var(--good-glow)); }
+    .stock-item:has(.mos-display.danger) .stock-icon { color: var(--bad); filter: drop-shadow(0 0 6px var(--bad-glow)); }
     .stock-label { font-size: 1.05rem; color: var(--muted); margin-bottom: 6px; z-index: 1; text-transform: uppercase; letter-spacing: 0.5px; }
     .mos-display {
       font-family: var(--display);
@@ -375,7 +401,7 @@
   <div class="container">
     <div class="safety-bar">
       <div class="safety-text" id="safetyText">
-        Days Since Last Incident: Calculating... | Safety First! 🛡️
+        DAYS SINCE LAST INCIDENT: CALCULATING... &nbsp;|&nbsp; SAFETY FIRST
       </div>
     </div>
 
@@ -398,37 +424,61 @@
     <div class="stock-grid">
       <div class="stock-item">
         <div class="quantity-small" id="primaryQty">0</div>
-        <div class="stock-icon">🧠</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="6" width="12" height="12" rx="1.5"/>
+          <rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/>
+          <path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3"/>
+        </svg>
         <div class="stock-label">360 Pro Primary</div>
         <div class="mos-display" id="primaryMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="secondaryQty">0</div>
-        <div class="stock-icon">②</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="8" width="11" height="11" rx="1.5"/>
+          <path d="M5 16V6a1 1 0 0 1 1-1h10"/>
+          <path d="M11.5 11.5h4v4h-4z"/>
+        </svg>
         <div class="stock-label">360 Pro Secondary</div>
         <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="printerQty">0</div>
-        <div class="stock-icon">🖨️</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9V3h12v6"/>
+          <path d="M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2"/>
+          <rect x="7" y="14" width="10" height="7" rx="1"/>
+          <path d="M17 12.5h.01"/>
+        </svg>
         <div class="stock-label">Receipt Printers</div>
         <div class="mos-display" id="printerMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="tabletQty">0</div>
-        <div class="stock-icon">📱</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="3" width="14" height="18" rx="2"/>
+          <line x1="10" y1="18" x2="14" y2="18"/>
+        </svg>
         <div class="stock-label">Tablets</div>
         <div class="mos-display" id="tabletMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="pinpadQty">0</div>
-        <div class="stock-icon">💳</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="3" width="14" height="18" rx="2"/>
+          <rect x="8" y="6" width="8" height="4" rx="0.5"/>
+          <path d="M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01"/>
+        </svg>
         <div class="stock-label">Pin Pads</div>
         <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="dealTagQty">0</div>
-        <div class="stock-icon">🏷️</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19.5 12.5l-7 7a2 2 0 0 1-2.83 0L4 13.83V6a2 2 0 0 1 2-2h7.83l5.67 5.67a2 2 0 0 1 0 2.83z"/>
+          <circle cx="8.5" cy="8.5" r="1.3"/>
+          <path d="M10.5 13.5l3 3"/>
+        </svg>
         <div class="stock-label">Deal Tag Printer</div>
         <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
       </div>
@@ -436,37 +486,63 @@
     <div class="stock-grid">
       <div class="stock-item">
         <div class="quantity-small" id="retailTagQty">0</div>
-        <div class="stock-icon">🏷️</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16.5 11.5l-5.5 5.5a1.6 1.6 0 0 1-2.3 0L4 12.3V7a1.6 1.6 0 0 1 1.6-1.6h5.3l5.6 5.6a1.6 1.6 0 0 1 0 2.3z"/>
+          <circle cx="7.6" cy="9" r="1.1"/>
+          <path d="M14 5.4l5.4 5.4a1.6 1.6 0 0 1 0 2.3l-3.4 3.4"/>
+        </svg>
         <div class="stock-label">Retail Tag Printer</div>
         <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="backupQty">0</div>
-        <div class="stock-icon">🔋</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="7" width="16" height="10" rx="2"/>
+          <path d="M22 10v4"/>
+          <path d="M11 9.5l-2 3h3l-2 3"/>
+        </svg>
         <div class="stock-label">Backup Battery</div>
         <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="metalStandsQty">0</div>
-        <div class="stock-icon">🛠️</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="3" width="16" height="11" rx="1.5"/>
+          <path d="M12 14v4"/>
+          <path d="M8 21h8"/>
+          <path d="M12 18l-4 3M12 18l4 3"/>
+        </svg>
         <div class="stock-label">Metal Stands</div>
         <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="scalesQty">0</div>
-        <div class="stock-icon">⚖️</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v16"/>
+          <path d="M7 19h10"/>
+          <path d="M5 6h14"/>
+          <path d="M5 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/>
+          <path d="M19 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/>
+        </svg>
         <div class="stock-label">Scales</div>
         <div class="mos-display" id="scalesMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="sangoQty">0</div>
-        <div class="stock-icon">💻</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="5" width="14" height="9" rx="1.5"/>
+          <path d="M2.5 18h19l-1.5-2.5H4z"/>
+        </svg>
         <div class="stock-label">Sango Computer</div>
         <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
       </div>
       <div class="stock-item">
         <div class="quantity-small" id="lcdQty">0</div>
-        <div class="stock-icon">📺</div>
+        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="12" rx="1.5"/>
+          <path d="M9 20h6"/>
+          <path d="M12 16v4"/>
+        </svg>
         <div class="stock-label">LCD Kits</div>
         <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
       </div>
@@ -636,7 +712,7 @@
     const today = new Date();
     const diffTime = today - lastIncident;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    document.getElementById('safetyText').textContent = `Days Since Last Incident: ${diffDays} | Safety First! 🛡️`;
+    document.getElementById('safetyText').innerHTML = `<svg class="ticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.2 12l2 2 3.6-4"/></svg> DAYS SINCE LAST INCIDENT: ${diffDays} &nbsp;|&nbsp; SAFETY FIRST`;
   }
   updateSafetyDays();
 
