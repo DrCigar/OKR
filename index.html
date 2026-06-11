@@ -675,8 +675,8 @@
   // Returns true when a KPI is in its "max achievement" band.
   function isKpiMaxed(name, value) {
     const n = (name || '').toLowerCase();
-    if (n.includes('supply order success')) return value > 98.5;
-    if (n.includes('on time fulfillment')) return value > 99.5;
+    if (n.includes('supply order success')) return value > 99;
+    if (n.includes('on time fulfillment')) return value > 99;
     if (n.includes('on time po')) return value >= 90;
     if (n.includes('shrink')) return value >= -1 && value <= 0;
     if (n.includes('supply chain stock health') || n.includes('stock health')) return value === 100;
