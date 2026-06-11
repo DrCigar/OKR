@@ -951,7 +951,7 @@
         const kpiHistory = history[nameRaw] || [];
         const lowerBetter = isLowerBetter(nameRaw);
         let arrow = trendArrow(kpiHistory, lowerBetter);
-        if (nameLower.includes('supply order success') || nameLower.includes('on time fulfillment')) arrow = '';
+        if (nameLower.includes('supply order success') || nameLower.includes('on time fulfillment') || nameLower.includes('shrink')) arrow = '';
         const spark = sparkline(kpiHistory);
         const info = kpiInfoTooltip(nameLower);
 
