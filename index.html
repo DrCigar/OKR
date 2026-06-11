@@ -195,7 +195,59 @@
       justify-content: center;
       align-items: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      position: relative;
     }
+    .kpi-tooltip {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-6px);
+      width: 280px;
+      background: #0a0a0a;
+      border: 1px solid var(--border-hi);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: left;
+      z-index: 80;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+    }
+    .kpi-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 7px solid transparent;
+      border-bottom-color: var(--border-hi);
+    }
+    .kpi-tooltip-def {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 9px;
+    }
+    .kpi-tooltip-src {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--chrome);
+      letter-spacing: 0.5px;
+    }
+    .kpi-tooltip-src span {
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      margin-right: 4px;
+    }
+    .kpi-card:hover .kpi-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    .kpi-card:hover { z-index: 90; }
     .kpi-name {
       font-size: 0.95rem;
       color: var(--text);
@@ -707,6 +759,24 @@
     `;
   }
 
+  // Definition + source shown on hover for each KPI.
+  function kpiInfoTooltip(nameLower) {
+    const info = [
+      { match: 'supply order success', def: 'Percentage of supply orders that are picked, packed, shipped, and delivered correctly without any errors.', source: 'SalesForce Report' },
+      { match: 'on time fulfillment', def: 'Percentage of customer orders fulfilled on time, as measured in NetSuite and in actual delivery.', source: 'SalesForce + NetSuite Reporting' },
+      { match: 'shrink', def: 'Measures inventory loss/shrink by comparing actual physical inventory (from cycle counts) against recorded receipts and transactions. Negative value indicates inventory loss.', source: 'AdHoc NetSuite Report' },
+      { match: 'on time po', def: 'Percentage of Purchase Orders (POs) delivered within 1 week of the expected due date.', source: 'NetSuite Reporting' },
+      { match: 'stock health', def: 'Overall average in-stock percentage across all product categories, based on 1 month of supply (MOS).', source: 'Supply Chain Forecasting Tool', alt: 'supply chain stock' },
+      { match: 'stock out', def: 'Percentage of time or occasions when a product is unavailable despite existing customer demand.', source: 'Excel Log' },
+    ];
+    const hit = info.find(i => nameLower.includes(i.match) || (i.alt && nameLower.includes(i.alt)));
+    if (!hit) return '';
+    return `<div class="kpi-tooltip">
+        <div class="kpi-tooltip-def">${hit.def}</div>
+        <div class="kpi-tooltip-src"><span>SOURCE</span> ${hit.source}</div>
+      </div>`;
+  }
+
   function trendArrow(points, lowerBetter = false) {
     if (!points || points.length < 2) return '<span class="trend-arrow flat">—</span>';
     const last = points[points.length - 1].value;
@@ -880,8 +950,10 @@
 
         const kpiHistory = history[nameRaw] || [];
         const lowerBetter = isLowerBetter(nameRaw);
-        const arrow = trendArrow(kpiHistory, lowerBetter);
+        let arrow = trendArrow(kpiHistory, lowerBetter);
+        if (nameLower.includes('supply order success') || nameLower.includes('on time fulfillment')) arrow = '';
         const spark = sparkline(kpiHistory);
+        const info = kpiInfoTooltip(nameLower);
 
         // Special case: Stock Health / MOS % KPI
         if (nameLower.includes('stock health') ||
@@ -896,6 +968,7 @@
             <div class="kpi-name">${nameRaw} ${arrow}</div>
             <div class="kpi-value ${stockHealthClass}">${valueRaw}</div>
             ${spark}
+            ${info}
           `;
           kpiGrid.appendChild(card);
           return;
@@ -931,6 +1004,7 @@
           <div class="kpi-name">${nameRaw} ${arrow}</div>
           <div class="kpi-value ${colorClass}">${valueRaw}</div>
           ${spark}
+          ${info}
         `;
         kpiGrid.appendChild(card);
       });
