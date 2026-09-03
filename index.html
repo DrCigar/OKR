@@ -349,7 +349,8 @@
     { match: "on time fulfillment", icon: "truck",       ok: v => v >= 97 },
     { match: "shrink",              icon: "shrink",      ok: v => v > -2 && v <= 0 },
     { match: "on time po",          icon: "poClock",     ok: v => v >= 90 },
-    { match: "stock health", alt: "supply chain stock", icon: "pulse", ok: v => v >= 97 },
+    // Stock Health only passes at 100%: every category has to hold a month.
+    { match: "stock health", alt: "supply chain stock", icon: "pulse", ok: v => v >= 100 },
     { match: "stock out",           icon: "alert",       ok: v => v >= 0 && v <= 2 }
   ];
 
