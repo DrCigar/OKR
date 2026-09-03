@@ -32,6 +32,7 @@
       --bad:       #F0503A;   /* metric off target */
       --s:         var(--muted); /* per-tile state colour, set by .s-good / .s-bad */
       --wash:      transparent;
+      --band:      clamp(16px, 3vh, 38px); /* height of the sparkline band */
       --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
       --sans: "Figtree", "Segoe UI", system-ui, sans-serif;
     }
@@ -55,6 +56,7 @@
 
     /* ---------- top bar ---------- */
     .topbar {
+      position: relative;   /* the safety streak is centred against the bar */
       flex: 0 0 auto;
       height: clamp(56px, 6.2vh, 84px);
       border-bottom: 1px solid var(--line);
@@ -73,14 +75,30 @@
       letter-spacing: -0.015em;
       white-space: nowrap;
     }
+    /* Safety streak: centred in the bar and flashing, so it is the one thing on
+       the board that asks to be noticed even when every metric is green. */
     .safety {
-      display: flex; align-items: center; gap: 9px;
-      border: 1px solid var(--line); background: var(--panel-hi);
-      padding: clamp(5px, 0.7vh, 9px) clamp(9px, 0.9vw, 15px);
-      font-family: var(--mono); font-size: clamp(10px, 1.15vh, 14px);
-      color: var(--muted); letter-spacing: 0.04em; white-space: nowrap;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid var(--line-hi); background: var(--panel-hi);
+      padding: clamp(5px, 0.75vh, 10px) clamp(11px, 1.1vw, 20px);
+      font-family: var(--mono); font-size: clamp(10px, 1.3vh, 16px);
+      color: var(--muted); letter-spacing: 0.06em; white-space: nowrap;
+      animation: streakFlash 2.2s ease-in-out infinite;
     }
-    .safety b { font-family: var(--sans); font-weight: 700; color: var(--text); letter-spacing: 0; }
+    .safety b {
+      font-family: var(--sans); font-weight: 800; color: var(--good);
+      font-size: 1.35em; letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    @keyframes streakFlash {
+      0%, 100% { border-color: var(--line-hi); box-shadow: 0 0 0 0 rgba(63, 197, 132, 0); }
+      50%      { border-color: var(--good);    box-shadow: 0 0 16px 0 rgba(63, 197, 132, 0.4); }
+    }
+    /* Narrow screens have no room to centre it against the chrome. */
+    @media (max-width: 1180px) {
+      .safety { position: static; transform: none; animation: none; }
+    }
     .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
     .dot.good { background: var(--good); }
     .dot.live { background: var(--good); animation: breathe 2.6s ease-in-out infinite; }
@@ -144,7 +162,9 @@
        --s carries that state into the value, icon, dot, stripe and spark,
        so the grid reads as colour fields instead of white text on black. */
     .cell {
-      padding: clamp(10px, 1.3vh, 20px) clamp(11px, 1vw, 20px);
+      /* bottom padding reserves the sparkline band, which sits edge to edge */
+      padding: clamp(10px, 1.3vh, 20px) clamp(11px, 1vw, 20px)
+               calc(var(--band) + clamp(4px, 0.6vh, 9px));
       display: flex; flex-direction: column;
       min-width: 0; min-height: 0;
       position: relative;
@@ -160,15 +180,15 @@
     .cell-top {
       display: flex; align-items: flex-start;
       gap: clamp(8px, 0.75vw, 14px);
-      min-height: clamp(20px, 3vh, 40px);
+      min-height: clamp(20px, 3.2vh, 42px);
     }
     .tile-icon {
-      width: clamp(20px, 3vh, 40px); height: clamp(20px, 3vh, 40px);
+      width: clamp(20px, 3.2vh, 42px); height: clamp(20px, 3.2vh, 42px);
       color: var(--s); opacity: 0.75; flex: 0 0 auto; margin-top: 0.06em;
     }
     .cell-label {
       flex: 1; min-width: 0;
-      font-size: clamp(13px, 2.1vh, 29px);
+      font-size: clamp(13px, 2.3vh, 32px);
       font-weight: 700;
       color: var(--title);
       letter-spacing: -0.02em;
@@ -180,9 +200,11 @@
       margin-left: auto; margin-top: 0.5em;
     }
 
+    /* The value owns the middle of the tile: title above, band below. */
     .cell-value {
-      margin-top: auto;
-      font-size: clamp(24px, 3.9vh, 54px);
+      margin: auto 0;
+      text-align: center;
+      font-size: clamp(24px, 5vh, 68px);
       font-weight: 800; letter-spacing: -0.035em; line-height: 1;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
@@ -194,9 +216,9 @@
     }
 
     .cell-foot {
-      display: flex; align-items: center; gap: clamp(6px, 0.6vw, 12px);
-      margin-top: clamp(4px, 0.7vh, 11px);
-      min-height: clamp(15px, 2.2vh, 30px);
+      display: flex; align-items: baseline; justify-content: center;
+      gap: clamp(7px, 0.7vw, 14px);
+      margin-top: clamp(3px, 0.5vh, 8px);
     }
     .delta {
       font-family: var(--mono); font-size: clamp(9px, 1.15vh, 15px);
@@ -206,12 +228,15 @@
       font-family: var(--mono); font-size: clamp(9px, 1.1vh, 14px);
       letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); white-space: nowrap;
     }
+    /* Full-bleed band on the tile's bottom edge: six of these line up across a
+       row and give the grid a baseline. */
     .spark {
-      margin-left: auto; flex: 0 0 auto;
+      position: absolute; left: 0; right: 0; bottom: 0;
+      width: 100%; height: var(--band); display: block;
       color: var(--s);
-      width: clamp(44px, 4.6vw, 96px); height: clamp(15px, 2.2vh, 30px); display: block;
     }
-    .spark polyline { opacity: 0.6; }
+    .spark .line { opacity: 0.85; }
+    .spark .area { opacity: 0.15; }
 
     /* KPI definition and source, for anyone reading the board on a laptop.
        Invisible on the wall; it never takes space in the tile. */
@@ -256,7 +281,8 @@
     .seg.off { background: rgba(240, 80, 58, 0.22); box-shadow: inset 0 0 0 1px var(--bad); }
 
     @media (prefers-reduced-motion: reduce) {
-      .dot.live { animation: none; }
+      .dot.live, .safety { animation: none; }
+      .safety { border-color: var(--good); }
     }
   </style>
 </head>
@@ -365,22 +391,28 @@
       + (ICONS[name] || ICONS.pulse) + '</svg>';
   }
 
+  // The viewBox is deliberately wide and flat, close to the rendered band's own
+  // proportions, so stretching it edge to edge barely distorts the end marker.
   function spark(points) {
     if (!points || points.length < 2) return '';
     const values = points.map(p => p.value);
-    const w = 74, h = 24, pad = 3;
+    const w = 300, h = 32, pad = 5;
     const min = Math.min(...values), max = Math.max(...values);
+    const flat = max === min;
     const range = (max - min) || 1;
-    const step = (w - 1) / (values.length - 1);
+    const step = w / (values.length - 1);
     const pts = values.map((v, i) => {
-      const x = i * step;
-      const y = h - pad - ((v - min) / range) * (h - pad * 2);
+      const x = Math.min(i * step, w);
+      const y = flat ? h / 2 : h - pad - ((v - min) / range) * (h - pad * 2);
       return [x.toFixed(1), y.toFixed(1)];
     });
+    const line = pts.map(p => p.join(',')).join(' ');
     const last = pts[pts.length - 1];
     return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">'
-      + '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'
-      + '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.2" fill="currentColor"/></svg>';
+      + '<path class="area" d="M0,' + h + ' L' + line.replace(/ /g, ' L') + ' L' + w + ',' + h + ' Z" fill="currentColor"/>'
+      + '<polyline class="line" points="' + line + '" fill="none" stroke="currentColor" stroke-width="2"'
+      + ' stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'
+      + '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3" fill="currentColor"/></svg>';
   }
 
   // Week-over-week movement, stated plainly. Direction is not judged here:
