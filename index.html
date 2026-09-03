@@ -3,684 +3,296 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Supply Chain Mainframe</title>
+  <title>Supply Chain Operations</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap">
   <style>
+    /* ============================================================
+       Axis-aligned wall board, sized for a single TV frame.
+       One committed dark theme, no scrolling, no explanatory copy.
+       Each tile leads with its icon and its title at display size;
+       every metric reads green (on target) or red (off target).
+       Type scales in vh so one file reads on a 1080p or 4K panel.
+       ============================================================ */
     :root {
-      --bg: #000000;
-      --card: #0d0d0d;
-      --border: #242424;
-      --border-hi: #3a3a3a;
-      --text: #f5f5f5;
-      --muted: #707070;
-      --chrome: #9a9a9a;       /* neutral grey for chrome accents */
-      /* status colors only: green = up/good, orange = down/at-risk */
-      --good: #22c55e;
-      --good-glow: rgba(34, 197, 94, 0.55);
-      --down: #ef4023;
-      --down-glow: rgba(239, 64, 35, 0.5);
-      /* legacy aliases kept so existing rules resolve to the new system */
-      --orange: var(--chrome);
-      --orange-soft: rgba(154, 154, 154, 0.4);
-      --warn: var(--down);
-      --bad: var(--down);
-      --bad-glow: var(--down-glow);
-      --mono: "Share Tech Mono", "Courier New", monospace;
-      --display: "Orbitron", "Share Tech Mono", monospace;
+      /* Grounds sit just off pure black and titles just off pure white:
+         full-contrast black/white is what makes a wall board tiring. */
+      --ink:       #08090B;
+      --panel:     #0C0D10;
+      --panel-hi:  #121418;
+      --line:      #1E2025;
+      --line-hi:   #2C2F36;
+      --text:      #E3E7ED;   /* section titles */
+      --title:     #C3CAD6;   /* tile titles */
+      --muted:     #8C94A6;
+      --dim:       #5A6070;
+      --vermilion: #EF4023;   /* brand accent */
+      --good:      #3FC584;   /* metric on target */
+      --bad:       #F0503A;   /* metric off target */
+      --s:         var(--muted); /* per-tile state colour, set by .s-good / .s-bad */
+      --wash:      transparent;
+      --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+      --sans: "Figtree", "Segoe UI", system-ui, sans-serif;
     }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      padding: 0;
-      font-family: var(--mono);
-      background-color: var(--bg);
-      background-image:
-        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-      background-size: 42px 42px;
+      background: var(--ink);
       color: var(--text);
-      min-height: 100vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    /* CRT scanline overlay */
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0,0,0,0.10) 0,
-        rgba(0,0,0,0.10) 1px,
-        transparent 1px,
-        transparent 3px
-      );
+      font-family: var(--sans);
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .bg-sphere {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      pointer-events: none;
-      background:
-        linear-gradient(rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.42)),
-        url('honeycomb-bg.jpg') center center / cover no-repeat;
-      opacity: 0.55;
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    /* On a real panel the board is one frame, never a scroll. */
+    @media (min-height: 700px) {
+      .app { height: 100vh; overflow: hidden; }
     }
 
-    .bg-glow {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background: radial-gradient(
-        circle at 50% 0%,
-        rgba(255, 255, 255, 0.04) 0%,
-        transparent 55%
-      );
+    /* ---------- top bar ---------- */
+    .topbar {
+      flex: 0 0 auto;
+      height: clamp(56px, 6.2vh, 84px);
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      gap: clamp(14px, 1.6vw, 30px);
+      padding: 0 clamp(16px, 1.7vw, 34px);
     }
-
-    .container {
-      max-width: 100%;
-      padding: 20px 28px 28px;
-      background: transparent;
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-    }
-
-    .header-section { text-align: center; margin: 6px 0 18px; }
-    .brand-logo {
-      display: block;
-      height: 52px;
-      width: auto;
-      margin: 0 auto 14px;
-    }
-    .dashboard-title {
-      font-family: var(--display);
-      color: var(--text);
-      font-size: 2.7rem;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: 8px;
-      text-transform: uppercase;
-    }
-    .dashboard-title::after {
-      content: '';
-      display: block;
-      width: 200px;
-      height: 3px;
-      border-radius: 3px;
-      margin: 13px auto 0;
-      background: linear-gradient(90deg,
-        rgba(255,255,255,0.06),
-        rgba(255,255,255,0.75),
-        rgba(255,255,255,0.06));
-      background-size: 220% 100%;
-      animation: titleSweep 3.4s linear infinite;
-    }
-    @keyframes titleSweep {
-      0%   { background-position: 220% 0; }
-      100% { background-position: -220% 0; }
-    }
-    .safety-bar {
-      background: var(--card);
-      color: #d0d0d0;
-      font-size: 1.15rem;
-      font-weight: 600;
-      padding: 9px 0;
-      overflow: hidden;
+    .lockup { display: flex; align-items: center; gap: clamp(10px, 1vw, 18px); flex: 0 0 auto; }
+    .lockup img { height: clamp(20px, 2.6vh, 34px); width: auto; display: block; }
+    .lockup .sep { width: 1px; height: clamp(20px, 2.8vh, 36px); background: var(--line-hi); }
+    .lockup .mark {
+      font-weight: 900;
+      font-size: clamp(14px, 1.9vh, 25px);
+      letter-spacing: -0.015em;
       white-space: nowrap;
-      text-align: center;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
     }
-    .safety-text {
-      display: inline-block;
-      animation: scrollLeft 25s linear infinite;
+    .safety {
+      display: flex; align-items: center; gap: 9px;
+      border: 1px solid var(--line); background: var(--panel-hi);
+      padding: clamp(5px, 0.7vh, 9px) clamp(9px, 0.9vw, 15px);
+      font-family: var(--mono); font-size: clamp(10px, 1.15vh, 14px);
+      color: var(--muted); letter-spacing: 0.04em; white-space: nowrap;
     }
-    .ticker-icon {
-      width: 18px;
-      height: 18px;
-      vertical-align: -3px;
-      margin-right: 4px;
+    .safety b { font-family: var(--sans); font-weight: 700; color: var(--text); letter-spacing: 0; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+    .dot.good { background: var(--good); }
+    .dot.live { background: var(--good); animation: breathe 2.6s ease-in-out infinite; }
+    .dot.dead { background: var(--bad); }
+    @keyframes breathe {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 197, 132, 0.45); }
+      60%      { box-shadow: 0 0 0 5px rgba(63, 197, 132, 0); }
     }
-    @keyframes scrollLeft {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
+    .bar-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: clamp(12px, 1.4vw, 26px);
+      flex: 0 0 auto;
     }
-    .kpi-section {
-      margin: 0 0 20px;
-      text-align: center;
+    .sync {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: clamp(10px, 1.15vh, 14px); color: var(--muted);
+      white-space: nowrap;
     }
-    .kpi-title {
-      color: var(--text);
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin: 0 0 14px;
-      position: relative;
-      display: inline-block;
-    }
-    .kpi-title::after {
-      content: '';
-      display: block;
-      width: 48px;
-      height: 3px;
-      border-radius: 3px;
-      background: var(--orange);
-      margin: 8px auto 0;
-    }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 14px;
-    }
-    .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 12px;
-      text-align: center;
-      min-height: 90px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      position: relative;
-    }
-    .kpi-tooltip {
-      position: absolute;
-      top: calc(100% + 10px);
-      left: 50%;
-      transform: translateX(-50%) translateY(-6px);
-      width: 280px;
-      background: #0a0a0a;
-      border: 1px solid var(--border-hi);
-      border-radius: 10px;
-      padding: 12px 14px;
-      text-align: left;
-      z-index: 80;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.7);
-    }
-    .kpi-tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 7px solid transparent;
-      border-bottom-color: var(--border-hi);
-    }
-    .kpi-tooltip-def {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      line-height: 1.4;
-      color: var(--text);
-      margin-bottom: 9px;
-    }
-    .kpi-tooltip-src {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--chrome);
-      letter-spacing: 0.5px;
-    }
-    .kpi-tooltip-src span {
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      margin-right: 4px;
-    }
-    .kpi-card:hover .kpi-tooltip {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-    .kpi-card:hover { z-index: 90; }
-    .kpi-name {
-      font-size: 0.95rem;
-      color: var(--text);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .kpi-value {
-      font-family: var(--display);
-      font-size: 1.7rem;
-      font-weight: 800;
-    }
-    .kpi-value.high { color: var(--good); }
-    .kpi-value.medium { color: var(--warn); }
-    .kpi-value.low { color: var(--bad); }
-    .arsenal-header {
-      text-align: center;
-      margin: 25px 0 12px;
-    }
-    .arsenal-title {
-      font-family: var(--display);
-      color: var(--text);
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-    }
-    .arsenal-title::after {
-      content: '';
-      display: block;
-      width: 64px;
-      height: 4px;
-      border-radius: 4px;
-      background: var(--orange);
-      margin: 10px auto 0;
-    }
-    .stock-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 18px;
-      justify-items: center;
-      margin-bottom: 20px;
-    }
-    .stock-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 12px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      min-height: 150px;
-      position: relative;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-    }
-    /* HUD targeting-reticle corner brackets */
-    .stock-item::before, .stock-item::after {
-      content: "";
-      position: absolute;
-      width: 13px;
-      height: 13px;
-      border-color: var(--border-hi);
-      border-style: solid;
-      pointer-events: none;
-      transition: border-color 0.3s;
-    }
-    .stock-item::before { top: 7px; left: 7px; border-width: 2px 0 0 2px; border-top-left-radius: 3px; }
-    .stock-item::after  { bottom: 7px; right: 7px; border-width: 0 2px 2px 0; border-bottom-right-radius: 3px; }
-    .stock-item:has(.mos-display.win)::before,
-    .stock-item:has(.mos-display.win)::after { border-color: var(--good); }
-    .stock-item:has(.mos-display.danger)::before,
-    .stock-item:has(.mos-display.danger)::after { border-color: var(--bad); }
-
-    /* Per-tile status LED */
-    .status-led {
-      position: absolute;
-      top: 11px;
-      right: 11px;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--muted);
-      z-index: 2;
-    }
-    .stock-item:has(.mos-display.win) .status-led {
-      background: var(--good);
-      animation: ledGood 2.2s ease-in-out infinite;
-    }
-    .stock-item:has(.mos-display.danger) .status-led {
-      background: var(--down);
-      animation: ledBad 2.2s ease-in-out infinite;
-    }
-    @keyframes ledGood {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
-      50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-    }
-    @keyframes ledBad {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239,64,35,0.55); }
-      50%      { box-shadow: 0 0 0 6px rgba(239,64,35,0); }
+    .today {
+      font-weight: 600; font-size: clamp(12px, 1.6vh, 20px);
+      letter-spacing: -0.01em; white-space: nowrap; color: var(--title);
     }
 
-    .stock-icon { width: 46px; height: 46px; margin-bottom: 8px; z-index: 1; color: var(--muted); transition: color 0.3s, filter 0.3s; }
-    .stock-item:has(.mos-display.win) .stock-icon { color: var(--good); filter: drop-shadow(0 0 6px var(--good-glow)); }
-    .stock-item:has(.mos-display.danger) .stock-icon { color: var(--bad); filter: drop-shadow(0 0 6px var(--bad-glow)); }
-    .stock-label { font-size: 1.05rem; color: var(--text); margin-bottom: 6px; z-index: 1; text-transform: uppercase; letter-spacing: 0.5px; }
-    .mos-display {
-      font-family: var(--display);
-      font-size: 1.7rem;
-      font-weight: 800;
-      animation-duration: 2s;
-      animation-iteration-count: infinite;
-      z-index: 1;
+    /* ---------- board ---------- */
+    .board {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      gap: clamp(10px, 1.5vh, 24px);
+      padding: clamp(12px, 1.7vh, 26px) clamp(16px, 1.7vw, 34px) clamp(14px, 1.9vh, 28px);
     }
-    .mos-display.win { color: var(--good); text-shadow: 0 0 12px var(--good-glow); animation-name: pulseGreen; }
-    .mos-display.danger { color: var(--bad); text-shadow: 0 0 12px var(--bad-glow); animation-name: pulseRed; }
-    .quantity-small {
-      font-size: 0.85rem;
-      color: var(--orange);
+    .block { display: flex; flex-direction: column; min-height: 0; }
+    .block.kpi { flex: 1 1 0; }
+    .block.hw  { flex: 2 1 0; }
+    .block.okr { flex: 0 0 auto; }
+
+    h2 {
+      margin: 0 0 clamp(7px, 1vh, 14px);
+      padding-bottom: clamp(6px, 0.8vh, 12px);
+      border-bottom: 1px solid var(--line);
+      font-size: clamp(17px, 2.6vh, 36px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    /* ---------- hairline grids ---------- */
+    .grid {
+      flex: 1; min-height: 0;
+      display: grid;
+      gap: 1px;
+      background: var(--line);
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .grid.hw-grid { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid.hw-grid { grid-template-rows: none; }
+    }
+
+    /* Every tile is either on target or off target - never neutral.
+       --s carries that state into the value, icon, dot, stripe and spark,
+       so the grid reads as colour fields instead of white text on black. */
+    .cell {
+      padding: clamp(10px, 1.3vh, 20px) clamp(11px, 1vw, 20px);
+      display: flex; flex-direction: column;
+      min-width: 0; min-height: 0;
+      position: relative;
+      background-color: var(--panel);
+      background-image: linear-gradient(175deg, var(--wash), transparent 72%);
+      box-shadow: inset 3px 0 0 var(--s);
+    }
+    .cell.s-good { --s: var(--good); --wash: rgba(63, 197, 132, 0.07); }
+    .cell.s-bad  { --s: var(--bad);  --wash: rgba(240, 80, 58, 0.08); }
+    .cell.s-idle { --s: var(--line-hi); --wash: transparent; }
+
+    /* tile title: icon + name at display size, the way a wall board is read */
+    .cell-top {
+      display: flex; align-items: flex-start;
+      gap: clamp(8px, 0.75vw, 14px);
+      min-height: clamp(20px, 3vh, 40px);
+    }
+    .tile-icon {
+      width: clamp(20px, 3vh, 40px); height: clamp(20px, 3vh, 40px);
+      color: var(--s); opacity: 0.75; flex: 0 0 auto; margin-top: 0.06em;
+    }
+    .cell-label {
+      flex: 1; min-width: 0;
+      font-size: clamp(13px, 2.1vh, 29px);
       font-weight: 700;
-      position: absolute;
-      top: 10px;
-      left: 12px;
-      opacity: 0.9;
-      z-index: 1;
+      color: var(--title);
+      letter-spacing: -0.02em;
+      line-height: 1.12;
     }
-    @keyframes pulseGreen { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    @keyframes pulseRed { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .cell-top .dot {
+      width: clamp(7px, 1.05vh, 13px); height: clamp(7px, 1.05vh, 13px);
+      background: var(--s);
+      margin-left: auto; margin-top: 0.5em;
+    }
+
+    .cell-value {
+      margin-top: auto;
+      font-size: clamp(24px, 3.9vh, 54px);
+      font-weight: 800; letter-spacing: -0.035em; line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: var(--s);
+    }
+    .cell-value .unit {
+      font-size: clamp(11px, 1.7vh, 23px);
+      font-weight: 600; opacity: 0.62; letter-spacing: 0; margin-left: 3px;
+    }
+
+    .cell-foot {
+      display: flex; align-items: center; gap: clamp(6px, 0.6vw, 12px);
+      margin-top: clamp(4px, 0.7vh, 11px);
+      min-height: clamp(15px, 2.2vh, 30px);
+    }
+    .delta {
+      font-family: var(--mono); font-size: clamp(9px, 1.15vh, 15px);
+      color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+    }
+    .qty {
+      font-family: var(--mono); font-size: clamp(9px, 1.1vh, 14px);
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); white-space: nowrap;
+    }
+    .spark {
+      margin-left: auto; flex: 0 0 auto;
+      color: var(--s);
+      width: clamp(44px, 4.6vw, 96px); height: clamp(15px, 2.2vh, 30px); display: block;
+    }
+    .spark polyline { opacity: 0.6; }
+
+    /* KPI definition and source, for anyone reading the board on a laptop.
+       Invisible on the wall; it never takes space in the tile. */
+    .tip {
+      position: absolute;
+      top: calc(100% + 8px); left: 12px; right: 12px;
+      background: var(--panel-hi);
+      border: 1px solid var(--line-hi);
+      padding: 13px 15px;
+      z-index: 40;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.16s ease;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.75);
+    }
+    .tip .def { font-size: 13px; line-height: 1.45; color: var(--title); font-weight: 400; }
+    .tip .src {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      margin-top: 9px; letter-spacing: 0.04em;
+    }
+    .tip .src span { color: var(--dim); letter-spacing: 0.14em; margin-right: 5px; }
+    .cell:hover .tip { opacity: 1; visibility: visible; }
+    .cell:hover { z-index: 50; }
+
+    /* ---------- objective ---------- */
     .okr-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      margin: 25px 0;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center;
+      gap: clamp(16px, 2vw, 40px);
+      padding: clamp(10px, 1.4vh, 20px) clamp(12px, 1.2vw, 24px);
     }
-    .okr-section {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      padding: 12px 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    .okr-count {
+      font-size: clamp(24px, 3.9vh, 54px); font-weight: 900;
+      letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums;
+      flex: 0 0 auto; color: var(--bad);
     }
-    .okr-title { color: var(--text); font-size: 1.1rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 2px; white-space: nowrap; flex-shrink: 0; }
-    .okr-section .progress-bar { flex: 1; margin: 0; }
-    .okr-section .badge-container { margin: 0; flex-shrink: 0; }
-    #okr1Status { flex-shrink: 0; }
-    .progress-bar {
-      height: 28px;
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 8px 0;
-      position: relative;
-      cursor: pointer;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #15803d, var(--good));
-      transition: width 0.6s ease;
-      width: 0%;
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 28px;
-      background: transparent;
-      position: absolute;
-      top: 0;
-      left: 0;
-      opacity: 0;
-      cursor: pointer;
-      z-index: 2;
-    }
-    input[type="range"]::-webkit-slider-thumb,
-    input[type="range"]::-moz-range-thumb,
-    input[type="range"]::-ms-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 0;
-      height: 0;
-      background: transparent;
-    }
-    .badge-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
-    .badge { padding: 6px 12px; font-size: 0.95rem; background: #0a0a0a; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; transition: all 0.4s; }
-    .badge.unlocked { background: var(--good); color: #0a0a0a; border-color: var(--good); transform: scale(1.05); font-weight: 700; }
+    .okr-count.met { color: var(--good); }
+    .okr-count span { opacity: 0.55; font-weight: 600; font-size: 0.55em; }
+    .segs { display: flex; gap: clamp(3px, 0.35vw, 7px); flex: 1; min-width: 0; }
+    .seg { height: clamp(8px, 1.3vh, 19px); flex: 1; background: var(--panel-hi); }
+    .seg.on  { background: var(--good); }
+    .seg.off { background: rgba(240, 80, 58, 0.22); box-shadow: inset 0 0 0 1px var(--bad); }
 
-    /* State-driven glowing card borders (command-center style) */
-    .stock-item:not(.maxed):has(.mos-display.win),
-    .kpi-card:not(.maxed):has(.kpi-value.high) {
-      border-color: rgba(34, 197, 94, 0.55);
-      box-shadow: 0 0 18px rgba(34, 197, 94, 0.18), inset 0 0 22px rgba(34, 197, 94, 0.06);
-    }
-    .stock-item:not(.maxed):has(.mos-display.danger),
-    .kpi-card:not(.maxed):has(.kpi-value.low) {
-      border-color: rgba(255, 68, 68, 0.55);
-      box-shadow: 0 0 18px rgba(255, 68, 68, 0.18), inset 0 0 22px rgba(255, 68, 68, 0.06);
-    }
-
-    /* Sparkline + trend arrow */
-    .sparkline {
-      display: block;
-      width: 100%;
-      height: 26px;
-      margin-top: 6px;
-      overflow: visible;
-    }
-    .trend-arrow {
-      display: inline-block;
-      font-size: 0.95rem;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    .trend-arrow.good { color: var(--good); }
-    .trend-arrow.bad  { color: var(--bad); }
-    .trend-arrow.flat { color: var(--muted); }
-    .kpi-card, .stock-item { transition: box-shadow 0.3s; }
-
-    /* Weekly change ticker */
-    .wk-change {
-      display: inline-block;
-      font-size: 0.95rem;
-      padding: 3px 10px;
-      margin-top: 6px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.4);
-      letter-spacing: 0.4px;
-      line-height: 1.2;
-      font-weight: 700;
-      white-space: nowrap;
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-    .wk-change.good { color: var(--good); border-color: rgba(34, 197, 94, 0.4); }
-    .wk-change.bad { color: var(--down); border-color: rgba(239, 64, 35, 0.4); }
-    .wk-change.flat { color: var(--muted); border-color: var(--border); }
-
-    /* MAX ACHIEVEMENT: shiny gold border for max-state KPIs and OKR tile */
-    .okr-section.maxed,
-    .kpi-card.maxed {
-      border-color: #ffd700;
-      box-shadow:
-        0 0 24px #ffd700,
-        0 0 48px rgba(255, 215, 0, 0.5);
-      animation: goldBorderPulse 2.6s ease-in-out infinite;
-    }
-    .okr-section.maxed .progress-bar {
-      border-color: #ffd700;
-      box-shadow:
-        0 0 14px #ffd700,
-        0 0 28px rgba(255, 215, 0, 0.55);
-      animation: goldBorderPulse 2.6s ease-in-out infinite;
-    }
-    @keyframes goldBorderPulse {
-      0%, 100% { box-shadow: 0 0 14px #ffd700, 0 0 28px rgba(255, 215, 0, 0.45); }
-      50%      { box-shadow: 0 0 28px #ffd700, 0 0 56px rgba(255, 215, 0, 0.8); }
+    @media (prefers-reduced-motion: reduce) {
+      .dot.live { animation: none; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-wrapper">
-    <div class="bg-sphere"></div>
-    <div class="bg-glow"></div>
-  </div>
+  <div class="app">
+    <header class="topbar">
+      <div class="lockup">
+        <img src="pos360-logo.png" alt="POS360" />
+        <div class="sep"></div>
+        <div class="mark">Supply Chain Operations</div>
+      </div>
+      <div class="safety"><span class="dot good"></span> <b id="safetyDays">&mdash;</b> days incident-free</div>
+      <div class="bar-right">
+        <div class="sync"><span class="dot live" id="syncDot"></span> <span id="syncText">Connecting&hellip;</span></div>
+        <div class="today" id="today"></div>
+      </div>
+    </header>
 
-  <div class="container">
-    <div class="safety-bar">
-      <div class="safety-text" id="safetyText">
-        DAYS SINCE LAST INCIDENT: CALCULATING... &nbsp;|&nbsp; SAFETY FIRST
-      </div>
-    </div>
+    <div class="board">
+      <section class="block kpi">
+        <h2>Operating KPIs</h2>
+        <div class="grid" id="kpiGrid"></div>
+      </section>
 
-    <div class="header-section">
-      <img class="brand-logo" src="pos360-logo.png" alt="POS360" />
-      <h1 class="dashboard-title">SUPPLY CHAIN MAINFRAME</h1>
-    </div>
+      <section class="block hw">
+        <h2>Hardware Coverage</h2>
+        <div class="grid hw-grid" id="hwGrid"></div>
+      </section>
 
-    <!-- KPI Cards -->
-    <div class="kpi-section">
-      <div class="kpi-title">KPI's</div>
-      <div class="kpi-grid" id="kpiGrid">
-        <!-- Filled live from Sheet 2 -->
-      </div>
-    </div>
-
-    <!-- Hardware Arsenal -->
-    <div class="arsenal-header">
-      <div class="arsenal-title">HARDWARE ARSENAL</div>
-    </div>
-    <div class="stock-grid">
-      <div class="stock-item">
-        <div class="quantity-small" id="primaryQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="6" width="12" height="12" rx="1.5"/>
-          <rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/>
-          <path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3"/>
-        </svg>
-        <div class="stock-label">360 Pro Primary</div>
-        <div class="mos-display" id="primaryMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="secondaryQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="8" y="8" width="11" height="11" rx="1.5"/>
-          <path d="M5 16V6a1 1 0 0 1 1-1h10"/>
-          <path d="M11.5 11.5h4v4h-4z"/>
-        </svg>
-        <div class="stock-label">360 Pro Secondary</div>
-        <div class="mos-display" id="secondaryMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="printerQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 9V3h12v6"/>
-          <path d="M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2"/>
-          <rect x="7" y="14" width="10" height="7" rx="1"/>
-          <path d="M17 12.5h.01"/>
-        </svg>
-        <div class="stock-label">Receipt Printers</div>
-        <div class="mos-display" id="printerMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="tabletQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="3" width="14" height="18" rx="2"/>
-          <line x1="10" y1="18" x2="14" y2="18"/>
-        </svg>
-        <div class="stock-label">Tablets</div>
-        <div class="mos-display" id="tabletMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="pinpadQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="3" width="14" height="18" rx="2"/>
-          <rect x="8" y="6" width="8" height="4" rx="0.5"/>
-          <path d="M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01"/>
-        </svg>
-        <div class="stock-label">Pin Pads</div>
-        <div class="mos-display" id="pinpadMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="dealTagQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19.5 12.5l-7 7a2 2 0 0 1-2.83 0L4 13.83V6a2 2 0 0 1 2-2h7.83l5.67 5.67a2 2 0 0 1 0 2.83z"/>
-          <circle cx="8.5" cy="8.5" r="1.3"/>
-          <path d="M10.5 13.5l3 3"/>
-        </svg>
-        <div class="stock-label">Deal Tag Printer</div>
-        <div class="mos-display" id="dealTagPrinterMOS">0.0 MOS</div>
-      </div>
-    </div>
-    <div class="stock-grid">
-      <div class="stock-item">
-        <div class="quantity-small" id="retailTagQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16.5 11.5l-5.5 5.5a1.6 1.6 0 0 1-2.3 0L4 12.3V7a1.6 1.6 0 0 1 1.6-1.6h5.3l5.6 5.6a1.6 1.6 0 0 1 0 2.3z"/>
-          <circle cx="7.6" cy="9" r="1.1"/>
-          <path d="M14 5.4l5.4 5.4a1.6 1.6 0 0 1 0 2.3l-3.4 3.4"/>
-        </svg>
-        <div class="stock-label">Retail Tag Printer</div>
-        <div class="mos-display" id="retailTagPrinterMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="backupQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="7" width="16" height="10" rx="2"/>
-          <path d="M22 10v4"/>
-          <path d="M11 9.5l-2 3h3l-2 3"/>
-        </svg>
-        <div class="stock-label">Backup Battery</div>
-        <div class="mos-display" id="backupBatteryMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="metalStandsQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="3" width="16" height="11" rx="1.5"/>
-          <path d="M12 14v4"/>
-          <path d="M8 21h8"/>
-          <path d="M12 18l-4 3M12 18l4 3"/>
-        </svg>
-        <div class="stock-label">Metal Stands</div>
-        <div class="mos-display" id="metalStandsMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="scalesQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v16"/>
-          <path d="M7 19h10"/>
-          <path d="M5 6h14"/>
-          <path d="M5 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/>
-          <path d="M19 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/>
-        </svg>
-        <div class="stock-label">Scales</div>
-        <div class="mos-display" id="scalesMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="sangoQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="5" width="14" height="9" rx="1.5"/>
-          <path d="M2.5 18h19l-1.5-2.5H4z"/>
-        </svg>
-        <div class="stock-label">Sango Computer</div>
-        <div class="mos-display" id="sangoComputerMOS">0.0 MOS</div>
-      </div>
-      <div class="stock-item">
-        <div class="quantity-small" id="lcdQty">0</div>
-        <svg class="stock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="12" rx="1.5"/>
-          <path d="M9 20h6"/>
-          <path d="M12 16v4"/>
-        </svg>
-        <div class="stock-label">LCD Kits</div>
-        <div class="mos-display" id="lcdKitsMOS">0.0 MOS</div>
-      </div>
-    </div>
-
-    <!-- OKRs - side by side -->
-    <div class="okr-row">
-      <div class="okr-section">
-        <div class="okr-title">All Categories ≥ 1 MOS</div>
-        <div id="okr1Status" style="font-size: 1.1rem; color: #ffd700; white-space: nowrap;">
-          <span id="okr1Count">0</span> of 12 safe
+      <section class="block okr">
+        <h2>All Categories &ge; 1 MOS</h2>
+        <div class="okr-row">
+          <div class="okr-count" id="okrCount">&mdash;<span> / 12</span></div>
+          <div class="segs" id="segs"></div>
         </div>
-        <div class="progress-bar"><div class="progress-fill" id="prog1"></div></div>
-        <div class="badge-container">
-          <span class="badge" id="bAll">All Safe! ★</span>
-        </div>
-      </div>
+      </section>
     </div>
   </div>
 
@@ -689,16 +301,191 @@
   const KPI_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1952869269&single=true&output=csv";
   const HISTORY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9rYJSXpvAv9-4Kkc20lHtU0jUAa8prJ4LEz0Jk3kYnM8VG_rOfaIyeOxL3jZKa1TYBYCreeoZmGia/pub?gid=1174990261&single=true&output=csv";
 
-  // ---------- History / sparkline helpers ----------
+  const REFRESH_MS = 5 * 60 * 1000;   // the board sits on a wall for weeks; keep it current
+  const LAST_INCIDENT = "2024-04-22";
+
+  /* ---------- icon set: thin stroke, monochrome, one per tile ---------- */
+  const ICONS = {
+    orderCheck: '<path d="M8 4h8a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 4V2.5h4V4"/><path d="M9.5 12.5l2 2 3.5-4"/>',
+    truck:      '<path d="M2.5 7h10v9h-10z"/><path d="M12.5 10.5H17l3 3V16h-7.5z"/><circle cx="6.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/><path d="M8.3 18.5h6.4"/>',
+    shrink:     '<path d="M3.5 8l8.5-4 8.5 4-8.5 4z"/><path d="M3.5 8v8l8.5 4 8.5-4V8"/><path d="M9 13.5h6"/>',
+    poClock:    '<path d="M13 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/><circle cx="17" cy="6.5" r="3.5"/><path d="M17 5v1.8l1.3.9"/><path d="M9 13h5M9 16.5h4"/>',
+    pulse:      '<path d="M3 12.5h3.5L9 7l3 10 2.5-4.5H21"/>',
+    alert:      '<path d="M12 4.5l8.5 15H3.5z"/><path d="M12 9.5v4.5M12 16.8v.01"/>',
+    register:   '<rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/><path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3"/>',
+    printer:    '<path d="M6 9V3h12v6"/><path d="M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/>',
+    tablet:     '<rect x="5" y="3" width="14" height="18" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/>',
+    pinpad:     '<rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="4" rx="0.5"/><path d="M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01"/>',
+    tag:        '<path d="M19.5 12.5l-7 7a2 2 0 0 1-2.83 0L4 13.83V6a2 2 0 0 1 2-2h7.83l5.67 5.67a2 2 0 0 1 0 2.83z"/><circle cx="8.5" cy="8.5" r="1.3"/>',
+    battery:    '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 10v4"/><path d="M11 9.5l-2 3h3l-2 3"/>',
+    stand:      '<rect x="4" y="3" width="16" height="11" rx="1.5"/><path d="M12 14v4"/><path d="M8 21h8"/><path d="M12 18l-4 3M12 18l4 3"/>',
+    scale:      '<path d="M12 3v16"/><path d="M7 19h10"/><path d="M5 6h14"/><path d="M5 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/><path d="M19 6l-2.5 5a2.5 2.5 0 0 0 5 0z"/>',
+    computer:   '<rect x="5" y="5" width="14" height="9" rx="1.5"/><path d="M2.5 18h19l-1.5-2.5H4z"/>',
+    lcd:        '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M9 20h6"/><path d="M12 16v4"/>'
+  };
+
+  // Hardware categories, in board order, each with its instrument icon.
+  // Names must match column A of the Hardware tab.
+  const ITEMS = [
+    { name: "360 Pro Primary",    icon: "register" },
+    { name: "360 Pro Secondary",  icon: "register" },
+    { name: "Receipt Printers",   icon: "printer"  },
+    { name: "Tablets",            icon: "tablet"   },
+    { name: "Pin Pads",           icon: "pinpad"   },
+    { name: "Deal Tag Printer",   icon: "tag"      },
+    { name: "Retail Tag Printer", icon: "tag"      },
+    { name: "Backup Battery",     icon: "battery"  },
+    { name: "Metal Stands",       icon: "stand"    },
+    { name: "Scales",             icon: "scale"    },
+    { name: "Sango Computer",     icon: "computer" },
+    { name: "LCD Kits",           icon: "lcd"      }
+  ];
+
+  // Per KPI: which icon, and the rule that decides green or red. The definition
+  // and source shown on hover come from columns C and D of the KPI tab, so the
+  // sheet stays the single source of truth for that wording.
+  const KPI_SPECS = [
+    { match: "supply order success", icon: "orderCheck", ok: v => v >= 97 },
+    { match: "on time fulfillment", icon: "truck",       ok: v => v >= 97 },
+    { match: "shrink",              icon: "shrink",      ok: v => v > -2 && v <= 0 },
+    { match: "on time po",          icon: "poClock",     ok: v => v >= 90 },
+    { match: "stock health", alt: "supply chain stock", icon: "pulse", ok: v => v >= 97 },
+    { match: "stock out",           icon: "alert",       ok: v => v >= 0 && v <= 2 }
+  ];
+
+  function kpiSpec(nameLower) {
+    return KPI_SPECS.find(s => nameLower.includes(s.match) || (s.alt && nameLower.includes(s.alt)));
+  }
+
+  /* ---------- render helpers ---------- */
+  function icon(name) {
+    return '<svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      + ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + (ICONS[name] || ICONS.pulse) + '</svg>';
+  }
+
+  function spark(points) {
+    if (!points || points.length < 2) return '';
+    const values = points.map(p => p.value);
+    const w = 74, h = 24, pad = 3;
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = (max - min) || 1;
+    const step = (w - 1) / (values.length - 1);
+    const pts = values.map((v, i) => {
+      const x = i * step;
+      const y = h - pad - ((v - min) / range) * (h - pad * 2);
+      return [x.toFixed(1), y.toFixed(1)];
+    });
+    const last = pts[pts.length - 1];
+    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">'
+      + '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'
+      + '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.2" fill="currentColor"/></svg>';
+  }
+
+  // Week-over-week movement, stated plainly. Direction is not judged here:
+  // the tile's colour already says whether the metric is passing.
+  function weekChange(points) {
+    if (!points || points.length < 2) return '';
+    const delta = points[points.length - 1].value - points[points.length - 2].value;
+    if (Math.abs(delta) < 0.05) return '▬ 0.0 vs LW';
+    return (delta > 0 ? '▲ +' : '▼ −') + Math.abs(delta).toFixed(1) + ' vs LW';
+  }
+
+  // One tile shape for both grids: icon + title, then the value in its state colour.
+  function tile(o) {
+    return '<div class="cell ' + (o.state || 's-idle') + '">'
+      + '<div class="cell-top">' + icon(o.icon)
+      +   '<span class="cell-label">' + (o.name || '') + '</span>'
+      +   '<span class="dot"></span>'
+      + '</div>'
+      + '<div class="cell-value">' + o.value + (o.unit ? '<span class="unit">' + o.unit + '</span>' : '') + '</div>'
+      + '<div class="cell-foot">'
+      +   (o.qty ? '<span class="qty">' + o.qty + '</span>' : '')
+      +   (o.delta ? '<span class="delta">' + o.delta + '</span>' : '')
+      +   (o.spark || '')
+      + '</div>'
+      + (o.tip || '')
+      + '</div>';
+  }
+
+  function state(ok) { return ok ? 's-good' : 's-bad'; }
+
+  /* ---------- chrome ---------- */
+  function paintClock() {
+    document.getElementById('today').textContent = new Date().toLocaleDateString(undefined, {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    const days = Math.floor((new Date() - new Date(LAST_INCIDENT)) / 86400000);
+    document.getElementById('safetyDays').textContent = days.toLocaleString();
+  }
+
+  // 'ok' | 'partial' (hardware landed, a feed did not) | 'fail'
+  function paintSync(mode) {
+    const time = new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    const label = {
+      ok:      'Synced · ' + time,
+      partial: 'Synced · ' + time + ' · KPI feed offline',
+      fail:    'Sync failed · ' + time
+    }[mode];
+    document.getElementById('syncDot').className = 'dot ' + (mode === 'ok' ? 'live' : 'dead');
+    document.getElementById('syncText').textContent = label;
+  }
+
+  /* ---------- data ---------- */
+  // The KPI tab quotes its definitions, and those definitions contain commas,
+  // so the board needs a real CSV reader rather than a split on ",".
+  function parseCsv(text) {
+    const rows = [];
+    let row = [], field = '', quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (c !== '"') { field += c; }
+        else if (text[i + 1] === '"') { field += '"'; i++; }
+        else { quoted = false; }
+      } else if (c === '"') {
+        quoted = true;
+      } else if (c === ',') {
+        row.push(field); field = '';
+      } else if (c === '\n') {
+        row.push(field); rows.push(row); row = []; field = '';
+      } else if (c !== '\r') {
+        field += c;
+      }
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Google answers an overloaded or unpublished tab with an HTML error page and
+  // a 200, so check the body looks like CSV. Those errors are usually transient:
+  // retry once before giving up on a feed.
+  async function fetchCsv(url, attempts = 2) {
+    let failure;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const bust = (url.indexOf('?') > -1 ? '&' : '?') + '_=' + Date.now();
+        const res = await fetch(url + bust, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        if (text.trim().charAt(0) === '<') throw new Error('sheet returned an error page');
+        return text;
+      } catch (e) {
+        failure = e;
+        if (i < attempts - 1) await wait(2000);
+      }
+    }
+    throw new Error(failure.message + ' - ' + url);
+  }
+
   async function loadHistory() {
     try {
-      const res = await fetch(HISTORY_CSV_URL);
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
+      const rows = parseCsv(await fetchCsv(HISTORY_CSV_URL));
       const headers = rows[0].map(h => h.trim());
-      // Only keep rows that have a real Week Ending date in column A.
-      // History tab is columns A–S (Week Ending + 6 KPIs + 12 hardware).
-      // Anything outside that shape (orphan values, blank rows) is ignored.
+      // Only rows with a real Week Ending date in column A count; the History
+      // tab is columns A-S (Week Ending + 6 KPIs + 12 hardware categories).
       const data = rows.slice(1).filter(row => row[0] && row[0].trim());
       const history = {};
       headers.slice(1).forEach((name, i) => {
@@ -716,311 +503,162 @@
     }
   }
 
-  function isLowerBetter(name) {
-    // Metrics where a smaller number is better.
-    // NOTE: Shrink is stored as a negative number (-4.4 = 4.4% loss),
-    // so higher is actually better — it's NOT in this list.
-    const n = (name || '').toLowerCase();
-    return n.includes('stock out');
+  function renderHardware(mosMap, qtyMap, history) {
+    const safe = [];
+    document.getElementById('hwGrid').innerHTML = ITEMS.map(item => {
+      const mos = mosMap[item.name] || 0;
+      const qty = qtyMap[item.name] || 0;
+      const ok = mos >= 1;
+      safe.push(ok);
+      const points = history[item.name] || [];
+      return tile({
+        name: item.name,
+        icon: item.icon,
+        state: state(ok),
+        value: mos.toFixed(1),
+        unit: 'MOS',
+        qty: qty.toLocaleString() + ' on hand',
+        delta: weekChange(points),
+        spark: spark(points)
+      });
+    }).join('');
+    return safe;
   }
 
-  // Returns true when a KPI is in its "max achievement" band.
-  function isKpiMaxed(name, value) {
-    const n = (name || '').toLowerCase();
-    if (n.includes('supply order success')) return value > 99;
-    if (n.includes('on time fulfillment')) return value > 99;
-    if (n.includes('on time po')) return value >= 90;
-    if (n.includes('shrink')) return value >= -1 && value <= 0;
-    if (n.includes('supply chain stock health') || n.includes('stock health')) return value === 100;
-    if (n.includes('stock out')) return value >= 0 && value <= 2;
-    return false;
+  function renderKpis(kpiRows, history, stockHealthPct) {
+    const cards = kpiRows.map(row => {
+      const nameRaw = (row[0] || '').trim();
+      if (!nameRaw) return '';
+      const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
+      const spec = kpiSpec(nameLower);
+
+      // Stock Health is derived from the hardware grid, not read from the sheet.
+      const isStockHealth = nameLower.includes('stock health')
+        || nameLower.includes('supply chain stock')
+        || nameLower.includes('months of supply');
+
+      let raw = (row[1] || '').trim();
+      if (isStockHealth) raw = stockHealthPct.toFixed(0) + '%';
+
+      const num = parseFloat(raw.replace(/[^0-9.-]/g, ''));
+      const value = isNaN(num) ? '—' : raw.replace(/[%\s]/g, '').replace('-', '−');
+      // Several KPI names carry the unit ("Total Shrink %"). Show it once, on
+      // the number, and keep the tile title clean.
+      const unit = (raw.indexOf('%') > -1 || nameRaw.indexOf('%') > -1) ? '%' : '';
+      const title = nameRaw.replace(/\s*%\s*$/, '');
+      const ok = spec && !isNaN(num) ? spec.ok(num) : false;
+      const points = history[nameRaw] || [];
+
+      // Definition and source live in columns C and D of the KPI tab.
+      const def = (row[2] || '').trim();
+      const src = (row[3] || '').trim();
+      const tip = def || src
+        ? '<div class="tip">'
+          + (def ? '<div class="def">' + def + '</div>' : '')
+          + (src ? '<div class="src"><span>SOURCE</span>' + src + '</div>' : '')
+          + '</div>'
+        : '';
+
+      return tile({
+        name: title,
+        icon: spec ? spec.icon : 'pulse',
+        state: state(ok),
+        value: value,
+        unit: unit,
+        delta: weekChange(points),
+        spark: spark(points),
+        tip: tip
+      });
+    }).filter(Boolean);
+
+    document.getElementById('kpiGrid').innerHTML = cards.length
+      ? cards.join('')
+      : tile({ name: 'No KPI data in the sheet', icon: 'alert', state: 's-bad', value: '—' });
   }
 
-  function sparkline(points) {
-    if (!points || points.length < 2) return '';
-    const values = points.map(p => p.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-    const width = 100, height = 26, pad = 3;
-    const step = width / (points.length - 1);
-    const coords = points.map((p, i) => {
-      const x = i * step;
-      const y = height - pad - ((p.value - min) / range) * (height - 2 * pad);
-      return [x.toFixed(1), y.toFixed(1)];
-    });
-    const polyPts = coords.map(c => c.join(',')).join(' ');
-    const [lx, ly] = coords[coords.length - 1];
-    return `
-      <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${polyPts}" fill="none" stroke="#8a8a8a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>
-        <circle cx="${lx}" cy="${ly}" r="2.2" fill="#cfcfcf"/>
-      </svg>
-    `;
+  // One segment per category, in grid order - so the gap in the bar sits where
+  // the short category sits, not bunched at the end.
+  function renderObjective(safe) {
+    const safeCount = safe.filter(Boolean).length;
+    const count = document.getElementById('okrCount');
+    count.innerHTML = safeCount + '<span> / ' + ITEMS.length + '</span>';
+    count.classList.toggle('met', safeCount === ITEMS.length);
+    document.getElementById('segs').innerHTML = ITEMS
+      .map((item, i) => '<div class="seg ' + (safe[i] ? 'on' : 'off') + '" title="' + item.name + '"></div>')
+      .join('');
   }
 
-  // Definition + source shown on hover for each KPI.
-  function kpiInfoTooltip(nameLower) {
-    const info = [
-      { match: 'supply order success', def: 'Percentage of supply orders that are picked, packed, shipped, and delivered correctly without any errors.', source: 'SalesForce Report' },
-      { match: 'on time fulfillment', def: 'Percentage of customer orders fulfilled on time, as measured in NetSuite and in actual delivery.', source: 'SalesForce + NetSuite Reporting' },
-      { match: 'shrink', def: 'Measures inventory loss/shrink by comparing actual physical inventory (from cycle counts) against recorded receipts and transactions. Negative value indicates inventory loss.', source: 'AdHoc NetSuite Report' },
-      { match: 'on time po', def: 'Percentage of Purchase Orders (POs) delivered within 1 week of the expected due date.', source: 'NetSuite Reporting' },
-      { match: 'stock health', def: 'Overall average in-stock percentage across all product categories, based on 1 month of supply (MOS).', source: 'Supply Chain Forecasting Tool', alt: 'supply chain stock' },
-      { match: 'stock out', def: 'Percentage of time or occasions when a product is unavailable despite existing customer demand.', source: 'Excel Log' },
-    ];
-    const hit = info.find(i => nameLower.includes(i.match) || (i.alt && nameLower.includes(i.alt)));
-    if (!hit) return '';
-    return `<div class="kpi-tooltip">
-        <div class="kpi-tooltip-def">${hit.def}</div>
-        <div class="kpi-tooltip-src"><span>SOURCE</span> ${hit.source}</div>
-      </div>`;
+  function renderKpisOffline() {
+    document.getElementById('kpiGrid').innerHTML =
+      '<div class="cell s-bad" style="grid-column: 1 / -1">'
+      + '<div class="cell-top">' + icon('alert')
+      +   '<span class="cell-label">KPI feed unavailable</span><span class="dot"></span>'
+      + '</div>'
+      + '<div class="cell-value">—</div>'
+      + '<div class="cell-foot"><span class="delta">Sheet did not answer · retrying</span></div>'
+      + '</div>';
   }
 
-  function trendArrow(points, lowerBetter = false) {
-    if (!points || points.length < 2) return '<span class="trend-arrow flat">—</span>';
-    const last = points[points.length - 1].value;
-    const prev = points[points.length - 2].value;
-    if (last === prev) return '<span class="trend-arrow flat">▬</span>';
-    const goingUp = last > prev;
-    const isGood = lowerBetter ? !goingUp : goingUp;
-    const arrow = goingUp ? '▲' : '▼';
-    return `<span class="trend-arrow ${isGood ? 'good' : 'bad'}">${arrow}</span>`;
-  }
+  // Once a feed has painted the wall, a later blip must not blank it.
+  let kpisEverLoaded = false;
 
-  function weekOverWeekChange(points, lowerBetter = false) {
-    if (!points || points.length < 2) return '';
-    const last = points[points.length - 1].value;
-    const prev = points[points.length - 2].value;
-    const delta = last - prev;
-    if (delta === 0) return '<span class="wk-change flat">▬ 0.0 MOS Vs. LW</span>';
-    const goingUp = delta > 0;
-    const arrow = goingUp ? '▲' : '▼';
-    const sign = goingUp ? '+' : '';
-    return `<span class="wk-change flat">${arrow} ${sign}${delta.toFixed(1)} MOS Vs. LW</span>`;
-  }
-
-  const mosElements = {
-    primaryMOS: document.getElementById('primaryMOS'),
-    secondaryMOS: document.getElementById('secondaryMOS'),
-    printerMOS: document.getElementById('printerMOS'),
-    tabletMOS: document.getElementById('tabletMOS'),
-    pinpadMOS: document.getElementById('pinpadMOS'),
-    dealTagPrinterMOS: document.getElementById('dealTagPrinterMOS'),
-    retailTagPrinterMOS: document.getElementById('retailTagPrinterMOS'),
-    backupBatteryMOS: document.getElementById('backupBatteryMOS'),
-    metalStandsMOS: document.getElementById('metalStandsMOS'),
-    scalesMOS: document.getElementById('scalesMOS'),
-    sangoComputerMOS: document.getElementById('sangoComputerMOS'),
-    lcdKitsMOS: document.getElementById('lcdKitsMOS')
-  };
-
-  const quantityElements = {
-    primaryQty: document.getElementById('primaryQty'),
-    secondaryQty: document.getElementById('secondaryQty'),
-    printerQty: document.getElementById('printerQty'),
-    tabletQty: document.getElementById('tabletQty'),
-    pinpadQty: document.getElementById('pinpadQty'),
-    dealTagQty: document.getElementById('dealTagQty'),
-    retailTagQty: document.getElementById('retailTagQty'),
-    backupQty: document.getElementById('backupQty'),
-    metalStandsQty: document.getElementById('metalStandsQty'),
-    scalesQty: document.getElementById('scalesQty'),
-    sangoQty: document.getElementById('sangoQty'),
-    lcdQty: document.getElementById('lcdQty')
-  };
-
-  const itemOrder = [
-    '360 Pro Primary',
-    '360 Pro Secondary',
-    'Receipt Printers',
-    'Tablets',
-    'Pin Pads',
-    'Deal Tag Printer',
-    'Retail Tag Printer',
-    'Backup Battery',
-    'Metal Stands',
-    'Scales',
-    'Sango Computer',
-    'LCD Kits'
-  ];
-
-  // Smart days calculation for safety bar
-  function updateSafetyDays() {
-    const lastIncident = new Date("2024-04-22");
-    const today = new Date();
-    const diffTime = today - lastIncident;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    document.getElementById('safetyText').innerHTML = `<svg class="ticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.2 12l2 2 3.6-4"/></svg> DAYS SINCE LAST INCIDENT: ${diffDays} &nbsp;|&nbsp; SAFETY FIRST`;
-  }
-  updateSafetyDays();
-
-  // Inject a status LED into each hardware tile
-  document.querySelectorAll('.stock-item').forEach(item => {
-    const led = document.createElement('span');
-    led.className = 'status-led';
-    item.appendChild(led);
-  });
-
-  async function loadFromSheet() {
+  async function load() {
     try {
-      // Fetch hardware + history in parallel
       const [hwText, history] = await Promise.all([
-        fetch(HARDWARE_CSV_URL).then(r => r.text()),
+        fetchCsv(HARDWARE_CSV_URL),
         loadHistory()
       ]);
-      const hwRows = hwText.trim().split('\n').map(row => row.split(','));
-      const hwData = hwRows.slice(1);
 
-      const mosMap = {};
-      const qtyMap = {};
-      hwData.forEach(row => {
-        const item = row[0]?.trim();
-        const qty = parseInt(row[1]) || 0;
-        const mos = parseFloat(row[2]) || 0;
-        if (item) {
-          mosMap[item] = mos;
-          qtyMap[item] = qty;
-        }
+      const mosMap = {}, qtyMap = {};
+      parseCsv(hwText).slice(1).forEach(row => {
+        const item = row[0] && row[0].trim();
+        if (!item) return;
+        qtyMap[item] = parseInt(row[1]) || 0;
+        mosMap[item] = parseFloat(row[2]) || 0;
       });
 
-      let safeCount = 0;
-      itemOrder.forEach((item, index) => {
-        const mosValue = mosMap[item] || 0;
-        const qtyValue = qtyMap[item] || 0;
+      const safe = renderHardware(mosMap, qtyMap, history);
+      const stockHealthPct = (safe.filter(Boolean).length / ITEMS.length) * 100;
+      renderObjective(safe);
 
-        const mosEl = Object.values(mosElements)[index];
-        mosEl.textContent = mosValue.toFixed(1) + " MOS";
-
-        const qtyEl = Object.values(quantityElements)[index];
-        qtyEl.textContent = qtyValue;
-
-        mosEl.classList.remove('win', 'danger');
-        if (mosValue >= 1) {
-          mosEl.classList.add('win');
-          safeCount++;
-        } else {
-          mosEl.classList.add('danger');
-        }
-
-        // Attach weekly change ticker + sparkline + trend arrow (higher MOS = better)
-        const stockItem = mosEl.closest('.stock-item');
-        stockItem.querySelectorAll('.sparkline-wrapper').forEach(el => el.remove());
-        const itemHistory = history[item] || [];
-        if (itemHistory.length >= 2) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'sparkline-wrapper';
-          wrapper.style.width = '100%';
-          wrapper.style.textAlign = 'center';
-          wrapper.innerHTML = weekOverWeekChange(itemHistory, false) + sparkline(itemHistory);
-          stockItem.appendChild(wrapper);
-          mosEl.insertAdjacentHTML('beforeend', ' ' + trendArrow(itemHistory, false));
-        }
-      });
-
-      const okr1Pct = (safeCount / 12) * 100;
-      document.getElementById('prog1').style.width = okr1Pct + '%';
-      document.getElementById('okr1Count').textContent = safeCount;
-
-      const maxed = safeCount === 12;
-      document.getElementById('bAll').classList.toggle('unlocked', maxed);
-      document.querySelector('.okr-section').classList.toggle('maxed', maxed);
-
-      // KPI cards from Sheet 2
-      const kpiResponse = await fetch(KPI_CSV_URL);
-      const kpiText = await kpiResponse.text();
-      const kpiRows = kpiText.trim().split('\n').map(row => row.split(','));
-      const kpiData = kpiRows.slice(1);
-
-      const kpiGrid = document.getElementById('kpiGrid');
-      kpiGrid.innerHTML = '';
-
-      // Calculate stock health % once (for any matching KPI card)
-      const stockHealthPct = (safeCount / 12) * 100;
-      const stockHealthClass = stockHealthPct >= 97 ? 'high' :
-                               stockHealthPct >= 93 ? 'medium' : 'low';
-
-      kpiData.forEach(row => {
-        const nameRaw = row[0]?.trim() || '';
-        let valueRaw = row[1]?.trim() || '';
-
-        if (!nameRaw) return;
-
-        const nameLower = nameRaw.toLowerCase().replace(/\s+/g, ' ').trim();
-
-        const kpiHistory = history[nameRaw] || [];
-        const lowerBetter = isLowerBetter(nameRaw);
-        let arrow = trendArrow(kpiHistory, lowerBetter);
-        if (nameLower.includes('supply order success') || nameLower.includes('on time fulfillment') || nameLower.includes('shrink')) arrow = '';
-        const spark = sparkline(kpiHistory);
-        const info = kpiInfoTooltip(nameLower);
-
-        // Special case: Stock Health / MOS % KPI
-        if (nameLower.includes('stock health') ||
-            nameLower.includes('supply chain stock') ||
-            nameLower.includes('mos') ||
-            nameLower.includes('months of supply')) {
-          valueRaw = stockHealthPct.toFixed(0) + '%';
-          const card = document.createElement('div');
-          card.className = 'kpi-card';
-          if (isKpiMaxed(nameRaw, stockHealthPct)) card.classList.add('maxed');
-          card.innerHTML = `
-            <div class="kpi-name">${nameRaw} ${arrow}</div>
-            <div class="kpi-value ${stockHealthClass}">${valueRaw}</div>
-            ${spark}
-            ${info}
-          `;
-          kpiGrid.appendChild(card);
-          return;
-        }
-
-        // Normal KPI logic (with value from sheet) — preserve minus signs for negatives
-        const valueNum = parseFloat(valueRaw.replace(/[^0-9.-]/g, '')) || 0;
-
-        let colorClass = '';
-        if (nameLower.includes('shrink')) {
-          // Shrink stored as negative. Green: -2 to 0, Orange: -3 to -2, Red: below -3 or positive
-          if (valueNum > 0 || valueNum <= -3) colorClass = 'low';
-          else if (valueNum <= -2) colorClass = 'medium';
-          else colorClass = 'high';
-        } else if (nameLower.includes('stock out frequency') || nameLower.includes('stock outs') || nameLower.includes('all time stock outs')) {
-          if (valueNum <= 2) colorClass = 'high';
-          else if (valueNum <= 4) colorClass = 'medium';
-          else colorClass = 'low';
-        } else if (nameLower.includes('on time po') || nameLower.includes('on time po %')) {
-          if (valueNum >= 90) colorClass = 'high';
-          else if (valueNum >= 80) colorClass = 'medium';
-          else colorClass = 'low';
-        } else {
-          if (valueNum >= 97) colorClass = 'high';
-          else if (valueNum >= 93) colorClass = 'medium';
-          else colorClass = 'low';
-        }
-
-        const card = document.createElement('div');
-        card.className = 'kpi-card';
-        if (isKpiMaxed(nameRaw, valueNum)) card.classList.add('maxed');
-        card.innerHTML = `
-          <div class="kpi-name">${nameRaw} ${arrow}</div>
-          <div class="kpi-value ${colorClass}">${valueRaw}</div>
-          ${spark}
-          ${info}
-        `;
-        kpiGrid.appendChild(card);
-      });
-
-      if (kpiGrid.children.length === 0) {
-        kpiGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; font-size: 1.4rem;">No KPI data in Sheet 2</div>';
+      // The KPI tab can be offline on its own; hardware still deserves the wall.
+      let kpisOk = true;
+      try {
+        const kpiRows = parseCsv(await fetchCsv(KPI_CSV_URL)).slice(1);
+        renderKpis(kpiRows, history, stockHealthPct);
+        kpisEverLoaded = true;
+      } catch (kpiError) {
+        console.error('KPI load failed', kpiError);
+        if (!kpisEverLoaded) renderKpisOffline();
+        kpisOk = false;
       }
+
+      paintClock();
+      paintSync(kpisOk ? 'ok' : 'partial');
     } catch (error) {
-      console.error("Error loading data:", error);
-      document.getElementById('kpiGrid').innerHTML = '<div style="text-align:center; color:#ff0044;">Failed to load KPIs</div>';
+      // Keep the last good numbers on the wall; only the sync badge changes.
+      console.error('Board load failed', error);
+      paintSync('fail');
     }
   }
 
-  loadFromSheet();
+  /* ---------- start: titles first, then numbers ---------- */
+  function renderSkeleton() {
+    document.getElementById('kpiGrid').innerHTML = KPI_SPECS
+      .map(spec => tile({ icon: spec.icon, value: '—' }))
+      .join('');
+    document.getElementById('hwGrid').innerHTML = ITEMS
+      .map(item => tile({ name: item.name, icon: item.icon, value: '—', unit: 'MOS' }))
+      .join('');
+    document.getElementById('segs').innerHTML = ITEMS.map(() => '<div class="seg"></div>').join('');
+  }
 
-  console.log("Dashboard loaded – Stock Health KPI now shows % of categories ≥ 1 MOS!");
+  paintClock();
+  renderSkeleton();
+  load();
+
+  setInterval(load, REFRESH_MS);
+  setInterval(paintClock, 60 * 1000);
 </script>
 </body>
 </html>
