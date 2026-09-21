@@ -424,9 +424,12 @@
     box:        '<rect x="3.5" y="6" width="17" height="13" rx="1.5"/><path d="M3.5 10.5h17"/><path d="M9.5 6V3.5h5V6"/>'
   };
 
-  // The board takes its categories from the Hardware tab, in sheet order, so a
-  // product added there appears here without a code change. Icons are matched
-  // by name, then by keyword, then fall back to a plain crate.
+  // The board takes its categories from the Hardware tab, so a product added
+  // there appears here without a code change. This map gives each known
+  // category its icon AND its place on the board - the key order below is the
+  // order of the tiles, which lets the registers sit together without touching
+  // the sheet. Anything not listed keeps its sheet order, after these, with an
+  // icon matched by keyword or a plain crate.
   const ITEM_ICONS = {
     "360 Pro (P)":        "register",
     "360 Pro (S)":        "register",
@@ -443,6 +446,15 @@
     "Sango Computer":     "computer",
     "LCD Kits":           "lcd"
   };
+
+  const BOARD_ORDER = Object.keys(ITEM_ICONS);
+
+  // Known categories take their place from BOARD_ORDER; anything new keeps its
+  // sheet position, after them.
+  function boardRank(name, sheetIndex) {
+    const known = BOARD_ORDER.indexOf(name);
+    return known > -1 ? known : BOARD_ORDER.length + sheetIndex;
+  }
 
   function itemIcon(name) {
     if (ITEM_ICONS[name]) return ITEM_ICONS[name];
@@ -463,17 +475,23 @@
   const COLUMNS = 6;
   const HIDDEN_KEY = 'scops.hiddenCategories';
 
+  // What a screen shows before anyone touches the gear: fourteen categories do
+  // not fit six by two, and these two are the ones the board can spare.
+  const DEFAULT_HIDDEN = ['Scales', 'Sango Computer'];
+
   // Everything the board is currently showing, kept so a category toggle can
   // repaint without going back to the sheet.
   const board = { categories: [] };
   let hidden = readHidden();
 
+  // A screen that has never used the gear gets the default; one that has keeps
+  // exactly what it chose, including choosing to show everything.
   function readHidden() {
     try {
       const raw = window.localStorage.getItem(HIDDEN_KEY);
-      return new Set(raw ? JSON.parse(raw) : []);
+      return new Set(raw === null ? DEFAULT_HIDDEN : JSON.parse(raw));
     } catch (e) {
-      return new Set();
+      return new Set(DEFAULT_HIDDEN);
     }
   }
 
@@ -818,7 +836,7 @@
         loadHistory()
       ]);
 
-      board.categories = parseCsv(hwText).slice(1).map(row => {
+      board.categories = parseCsv(hwText).slice(1).map((row, i) => {
         const name = row[0] && row[0].trim();
         if (!name) return null;
         const mos = parseFloat(row[2]) || 0;
@@ -828,9 +846,10 @@
           mos: mos,
           ok: mos >= 1,
           icon: itemIcon(name),
+          rank: boardRank(name, i),
           points: history[name] || []
         };
-      }).filter(Boolean);
+      }).filter(Boolean).sort((a, b) => a.rank - b.rank);
 
       renderHardware();
       renderObjective();
