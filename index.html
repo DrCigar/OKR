@@ -447,17 +447,32 @@
     "LCD Kits":           "lcd"
   };
 
-  const BOARD_ORDER = Object.keys(ITEM_ICONS);
+  // Category names drift between tabs and over time - "360 Pro Primary" and
+  // "360 Pro (P)" are the same product. Everything the board matches on (icon,
+  // board order, history, hidden list) goes through this, so a rename in the
+  // sheet does not silently drop a tile to the end or lose its sparkline.
+  function canon(name) {
+    return String(name)
+      .toLowerCase()
+      .replace(/\bprimary\b/g, 'p')
+      .replace(/\bsecondary\b/g, 's')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  const BOARD_ORDER = Object.keys(ITEM_ICONS).map(canon);
 
   // Known categories take their place from BOARD_ORDER; anything new keeps its
   // sheet position, after them.
   function boardRank(name, sheetIndex) {
-    const known = BOARD_ORDER.indexOf(name);
+    const known = BOARD_ORDER.indexOf(canon(name));
     return known > -1 ? known : BOARD_ORDER.length + sheetIndex;
   }
 
+  const ICON_BY_CANON = {};
+  Object.keys(ITEM_ICONS).forEach(k => { ICON_BY_CANON[canon(k)] = ITEM_ICONS[k]; });
+
   function itemIcon(name) {
-    if (ITEM_ICONS[name]) return ITEM_ICONS[name];
+    if (ICON_BY_CANON[canon(name)]) return ICON_BY_CANON[canon(name)];
     const n = name.toLowerCase();
     if (n.indexOf('printer') > -1) return 'printer';
     if (n.indexOf('tablet') > -1) return 'tablet';
@@ -489,9 +504,10 @@
   function readHidden() {
     try {
       const raw = window.localStorage.getItem(HIDDEN_KEY);
-      return new Set(raw === null ? DEFAULT_HIDDEN : JSON.parse(raw));
+      const list = raw === null ? DEFAULT_HIDDEN : JSON.parse(raw);
+      return new Set(list.map(canon));
     } catch (e) {
-      return new Set(DEFAULT_HIDDEN);
+      return new Set(DEFAULT_HIDDEN.map(canon));
     }
   }
 
@@ -663,7 +679,10 @@
       const data = rows.slice(1).filter(row => row[0] && row[0].trim());
       const history = {};
       headers.slice(1).forEach((name, i) => {
-        history[name] = data
+        if (!name) return;
+        // Keyed canonically: the History tab and the Hardware tab do not always
+        // spell a category the same way.
+        history[canon(name)] = data
           .map(row => ({
             week: row[0].trim(),
             value: parseFloat((row[i + 1] || '').replace(/[^0-9.-]/g, ''))
@@ -680,7 +699,7 @@
   // Only the chosen categories get tiles; the rows follow from how many there
   // are, and the last row is padded out so the grid stays a clean rectangle.
   function renderHardware() {
-    const shown = board.categories.filter(c => !hidden.has(c.name));
+    const shown = board.categories.filter(c => !hidden.has(canon(c.name)));
     const grid = document.getElementById('hwGrid');
     const rows = Math.max(1, Math.ceil(shown.length / COLUMNS));
     const fillers = (COLUMNS - (shown.length % COLUMNS)) % COLUMNS;
@@ -720,7 +739,7 @@
       const unit = (raw.indexOf('%') > -1 || nameRaw.indexOf('%') > -1) ? '%' : '';
       const title = nameRaw.replace(/\s*%\s*$/, '');
       const ok = spec && !isNaN(num) ? spec.ok(num) : false;
-      const points = history[nameRaw] || [];
+      const points = history[canon(nameRaw)] || [];
 
       // Definition and source live in columns C and D of the KPI tab.
       const def = (row[2] || '').trim();
@@ -759,7 +778,7 @@
     count.innerHTML = safeCount + '<span> / ' + all.length + '</span>';
     count.classList.toggle('met', all.length > 0 && safeCount === all.length);
     document.getElementById('segs').innerHTML = all.map(c => {
-      const off = hidden.has(c.name);
+      const off = hidden.has(canon(c.name));
       return '<div class="seg ' + (c.ok ? 'on' : 'off') + (off ? ' is-hidden' : '')
         + '" title="' + esc(c.name) + ' · ' + c.mos.toFixed(1) + ' MOS'
         + (off ? ' · hidden' : '') + '"></div>';
@@ -769,11 +788,11 @@
   /* ---------- category chooser ---------- */
   function renderPanel() {
     document.getElementById('panelCount').textContent =
-      (board.categories.length - board.categories.filter(c => hidden.has(c.name)).length)
+      (board.categories.length - board.categories.filter(c => hidden.has(canon(c.name))).length)
       + ' of ' + board.categories.length + ' shown';
 
     document.getElementById('panelList').innerHTML = board.categories.map(c => {
-      const on = !hidden.has(c.name);
+      const on = !hidden.has(canon(c.name));
       return '<button type="button" class="opt' + (on ? ' on' : '') + '"'
         + ' role="switch" aria-checked="' + on + '" data-name="' + esc(c.name) + '">'
         + '<span class="box">' + (on ? '✓' : '') + '</span>'
@@ -800,8 +819,8 @@
     const name = opt.getAttribute('data-name');
     const category = board.categories.find(c => c.name === name);
     if (!category) return;
-    if (hidden.has(category.name)) hidden.delete(category.name);
-    else hidden.add(category.name);
+    if (hidden.has(canon(category.name))) hidden.delete(canon(category.name));
+    else hidden.add(canon(category.name));
     writeHidden();
     renderPanel();
     renderHardware();
@@ -847,7 +866,7 @@
           ok: mos >= 1,
           icon: itemIcon(name),
           rank: boardRank(name, i),
-          points: history[name] || []
+          points: history[canon(name)] || []
         };
       }).filter(Boolean).sort((a, b) => a.rank - b.rank);
 
@@ -892,7 +911,7 @@
       .join('');
 
     const names = Object.keys(ITEM_ICONS);
-    const shown = names.filter(n => !hidden.has(n));
+    const shown = names.filter(n => !hidden.has(canon(n)));
     const grid = document.getElementById('hwGrid');
     grid.style.gridTemplateRows =
       'repeat(' + Math.max(1, Math.ceil(shown.length / COLUMNS)) + ', minmax(0, 1fr))';
